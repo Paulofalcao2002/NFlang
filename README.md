@@ -31,10 +31,11 @@ Programming language created to sketch Football plays and strategies.
 
     EXPRESSION = TERM, { ("+" | "-"), TERM } ;
     TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER | ("signal", "(", ")") ;
+    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | DOWN | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER | ("signal", "(", ")") ;
 
     IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
     TYPE = "athlete" | "play" | "number" | "down" | "empty";
+    DOWN = "FirstDown" | "SecondDown" | "ThirdDown" | "FourthDown";
     POSITION = "QB" | "WR" | "TE" | "RB" | "FB" | "OL" | "DL" | "LB" | "CB" | "S" | "K" | "P";
 
 
