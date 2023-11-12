@@ -8,21 +8,28 @@ Programming language created to sketch Football plays and strategies.
 
 ## EBNF
 
-    PROGRAM = { STATEMENT };
+    PROGRAM = { STATEMENT | DECLARATION };
+
+    DECLARATION = "action", TYPE, IDENTIFIER, "(", (λ | DECLARATION_ARGUMENTS) ")", DECLARATION_BLOCK, "\n";
+    DECLARATION_ARGUMENTS = IDENTIFIER, TYPE, {",", IDENTIFIER, TYPE};
+    DECLARATION_BLOCK = "{", { STATEMENT | ("result", GENERAL_EXPRESSION) }, "}";
+
 
     STATEMENT = ( λ | ASSIGNMENT | CALL | WHEN_CONDITIONAL | DRIVE_LOOP | VARDEC | PLAYUNTIL_LOOP), "\n" ;
-    ASSIGNMENT = IDENTIFIER, "is", GENERAL_EXPRESSION ;
+
+    ASSIGNMENT = IDENTIFIER, ("is", GENERAL_EXPRESSION) | ACTION_CALL_ARGUMENTS ;
+    ACTION_CALL_ARGUMENTS = "(", λ | (GENERAL_EXPRESSION, {",", GENERAL_EXPRESSION}) ")";
+
     CALL = "call", "(", BOOLEAN_EXPRESSION, ")" ;
     WHEN_CONDITIONAL = "when", BOOLEAN_EXPRESSION, "then", BLOCK, (λ | ("otherwise", BLOCK));
-    DRIVE_LOOP = "drive", TYPE, IDENTIFIER, "on", "(", DRIVE_EXPRESSION, ",", DRIVE_EXPRESSION, ")", BLOCK;
+    DRIVE_LOOP = "drive", TYPE, IDENTIFIER, "on", "(", EXPRESSION, ",", EXPRESSION, ")", BLOCK;
     VARDEC = TYPE, IDENTIFIER, (λ | ("is", GENERAL_EXPRESSION));
     PLAYUNTIL_LOOP = "playuntil", BOOLEAN_EXPRESSION, BLOCK;
     BLOCK = "{", { STATEMENT }, "}";
-    DRIVE_EXPRESSION = IDENTIFIER | EXPRESSION;
 
     GENERAL_EXPRESSION = PLAY_EXPRESSION | BOOLEAN_EXPRESSION;
 
-    PLAY_EXPRESSION = "{", PLAY_DEFINITION, {",", PLAY_DEFINITION}, "}";
+    PLAY_EXPRESSION = "{", λ | (PLAY_DEFINITION, {",", PLAY_DEFINITION}), "}";
     PLAY_DEFINITION = POSITION, ":", STRING;
 
     BOOLEAN_EXPRESSION = BOOLEAN_TERM, {"or", BOOLEAN_TERM}; 
@@ -31,7 +38,7 @@ Programming language created to sketch Football plays and strategies.
 
     EXPRESSION = TERM, { ("+" | "-"), TERM } ;
     TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | DOWN | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER | ("signal", "(", ")") ;
+    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | DOWN | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER, (λ | ACTION_CALL_ARGUMENTS)  | ("signal", "(", ")") ;
 
     IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
     TYPE = "athlete" | "play" | "number" | "down" | "empty";
