@@ -2,6 +2,12 @@
 
 Programming language created to sketch Football plays and strategies.
 
+### Compile 
+
+    bison -d parser.y 
+    flex lexer.l 
+    gcc -o nfl lex.yy.c parser.tab.c
+
 ## Syntax Diagram
 
 ![SyntaxDiagram](SyntaxDiagram.svg)
