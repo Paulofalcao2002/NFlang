@@ -3,6 +3,31 @@
 #include <stdlib.h>
 int yylex(); 
 
+int boolean_or(int a, int b) {
+    return a || b ? 1 : 0;
+}
+
+int boolean_and(int a, int b) {
+    return a && b ? 1 : 0;
+}
+
+int boolean_equals(int a, int b) {
+    return a == b ? 1 : 0;
+}
+
+int boolean_greater(int a, int b) {
+    return a > b ? 1 : 0;
+}
+
+int boolean_lesser(int a, int b) {
+    return a < b ? 1 : 0;
+}
+
+int boolean_not(int a) {
+    return !a ? 1 : 0;
+}
+
+
 %}
 
 %union {
@@ -28,11 +53,25 @@ int yylex();
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <number> expression term factor NUMBER
+%type <number> boolean_expression boolean_term relative_expression expression term factor NUMBER
 
 %%
 
-program: expression { printf("result: %d\n", $1); };
+program: boolean_expression { printf("result: %d\n", $1); };
+
+boolean_expression: boolean_expression OR boolean_term { $$= boolean_or($1, $3); }
+    | boolean_term { $$= $1; }
+    ;
+
+boolean_term: boolean_term AND relative_expression { $$= boolean_and($1, $3); }
+    | relative_expression { $$= $1; }
+    ;
+
+relative_expression: relative_expression EQUALS expression { $$= boolean_equals($1, $3); }
+    | relative_expression GREATER_THAN expression { $$= boolean_greater($1, $3); }
+    | relative_expression LESSER_THAN expression { $$= boolean_lesser($1, $3); }
+    | expression { $$= $1; }
+    ;
 
 expression: expression PLUS term { $$ = $1 + $3; }
           | expression MINUS term { $$ = $1 - $3; }
@@ -49,6 +88,7 @@ factor: NUMBER { $$ = $1; }
     | PLUS factor { $$ = +$2; }
     | MINUS factor { $$ = -$2; }
     | INCREMENT factor { $$ = $2 + 1; }
+    | NOT factor { $$= boolean_not($2); }
     ;
 
 // program: type | down | position | string | number | identifier | plus | minus | not | increment | l_parenthesis | r_parenthesis | times | divide | equals | greater_than | lesser_than | and | or | comma | colon | l_bracket | r_bracket  | is | when | then | otherwise | drive | on | signal | play_until | call | break_line | action; 
