@@ -28,6 +28,7 @@ int parse_dynamic_token(char *token_str, int token_type) {
 %}
 
 %%
+[ \t] ;
 "+" {return PLUS;}
 "-" {return MINUS;}
 "not" {return NOT;}
@@ -91,7 +92,10 @@ int parse_dynamic_token(char *token_str, int token_type) {
 }
 
 
-. {yyerror("Unknown token !!\n");}
+. {
+    printf("%s\n", yytext);
+    yyerror("Unknown token !!\n");
+}
 
 %%
 
@@ -100,6 +104,6 @@ int main() {
 }
 
 int yyerror(char *sp) {
-    printf("%s", sp);
+    printf("%s\n", sp);
     exit(1);
 }
