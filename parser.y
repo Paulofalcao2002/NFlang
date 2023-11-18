@@ -1,30 +1,32 @@
 %{
 #include <stdio.h>    
 #include <stdlib.h>
+#include <iostream>
+#include "nodes.h"
+using namespace std;
+
 int yylex(); 
 
-int boolean_or(int a, int b) {
-    return a || b ? 1 : 0;
+void yyerror(const char *s) {
+    // Define the yyerror function
+    fprintf(stderr, "Error: %s\n", s);
 }
 
-int boolean_and(int a, int b) {
-    return a && b ? 1 : 0;
+Node* makeNumber(int value) {
+    return new Number(value, vector<unique_ptr<Node>>());
 }
 
-int boolean_equals(int a, int b) {
-    return a == b ? 1 : 0;
+Node* makeUnOp(int operation, Node *child) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(child));
+    return new UnOp(operation, move(children));
 }
 
-int boolean_greater(int a, int b) {
-    return a > b ? 1 : 0;
-}
-
-int boolean_lesser(int a, int b) {
-    return a < b ? 1 : 0;
-}
-
-int boolean_not(int a) {
-    return !a ? 1 : 0;
+Node* makeBinOp(int operation, Node *left, Node *right) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(left));
+    children.emplace_back(unique_ptr<Node>(right));
+    return new BinOp(operation, move(children));
 }
 
 
@@ -33,6 +35,7 @@ int boolean_not(int a) {
 %union {
     char *string;
     int number;
+    Node *nodePtr;
 };
 
 // Arithmetic tokens
@@ -53,214 +56,43 @@ int boolean_not(int a) {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <number> boolean_expression boolean_term relative_expression expression term factor NUMBER
+%type <nodePtr> boolean_expression boolean_term relative_expression expression term factor
+%type <number> NUMBER
 
 %%
 
-program: boolean_expression { printf("result: %d\n", $1); };
+program: boolean_expression { printf("result: %d\n", $1->evaluate()); };
 
-boolean_expression: boolean_expression OR boolean_term { $$= boolean_or($1, $3); }
+boolean_expression: boolean_expression OR boolean_term { $$= makeBinOp((int) BinOperation::OR, $1, $3); }
     | boolean_term { $$= $1; }
     ;
 
-boolean_term: boolean_term AND relative_expression { $$= boolean_and($1, $3); }
+boolean_term: boolean_term AND relative_expression { $$= makeBinOp((int) BinOperation::AND, $1, $3); }
     | relative_expression { $$= $1; }
     ;
 
-relative_expression: relative_expression EQUALS expression { $$= boolean_equals($1, $3); }
-    | relative_expression GREATER_THAN expression { $$= boolean_greater($1, $3); }
-    | relative_expression LESSER_THAN expression { $$= boolean_lesser($1, $3); }
+relative_expression: relative_expression EQUALS expression { $$ = makeBinOp((int) BinOperation::EQUALS, $1, $3); }
+    | relative_expression GREATER_THAN expression { $$ = makeBinOp((int) BinOperation::GREATER_THAN, $1, $3); }
+    | relative_expression LESSER_THAN expression { $$ = makeBinOp((int) BinOperation::LESSER_THAN, $1, $3);}
     | expression { $$= $1; }
     ;
 
-expression: expression PLUS term { $$ = $1 + $3; }
-          | expression MINUS term { $$ = $1 - $3; }
+expression: expression PLUS term { $$ = makeBinOp((int) BinOperation::PLUS, $1, $3); }
+          | expression MINUS term { $$ = makeBinOp((int) BinOperation::MINUS, $1, $3); }
           | term { $$ = $1; }
           ;
 
-term: term TIMES factor { $$ = $1 * $3; }
-    | term DIVIDE factor { $$ = $1 / $3; }
+term: term TIMES factor { $$ = makeBinOp((int) BinOperation::TIMES, $1, $3); }
+    | term DIVIDE factor { $$ = makeBinOp((int) BinOperation::DIVIDE, $1, $3); }
     | factor { $$ = $1; }
     ;
 
-factor: NUMBER { $$ = $1; }
-    | L_PARENTHESIS expression R_PARENTHESIS {$$ = $2; }
-    | PLUS factor { $$ = +$2; }
-    | MINUS factor { $$ = -$2; }
-    | INCREMENT factor { $$ = $2 + 1; }
-    | NOT factor { $$= boolean_not($2); }
+factor: NUMBER { $$= makeNumber($1); }
+    | L_PARENTHESIS boolean_expression R_PARENTHESIS {$$ = $2; }
+    | PLUS factor { $$ = makeUnOp((int) UnOperation::PLUS, $2); }
+    | MINUS factor { $$ = makeUnOp((int) UnOperation::MINUS, $2);  }
+    | INCREMENT factor {$$ = makeUnOp((int) UnOperation::INCREMENT, $2); }
+    | NOT factor { $$ = makeUnOp((int) UnOperation::NOT, $2);  }
     ;
-
-// program: type | down | position | string | number | identifier | plus | minus | not | increment | l_parenthesis | r_parenthesis | times | divide | equals | greater_than | lesser_than | and | or | comma | colon | l_bracket | r_bracket  | is | when | then | otherwise | drive | on | signal | play_until | call | break_line | action; 
-
-// type: TYPE {
-//     printf("This is type: %s\n", yylval.string);
-//     exit(0);
-// };
-
-// down: DOWN {
-//     printf("This is down: %s\n", yylval.string);
-//     exit(0);
-// };
-
-// position: POSITION {
-//     printf("This is position: %s\n", yylval.string);
-//     exit(0);
-// };
-
-// string: STRING {
-//     printf("This is string: %s\n", yylval.string);
-//     exit(0);
-// };
-
-// number: NUMBER {
-//     printf("This is number: %d\n", yylval.number);
-//     exit(0);
-// };
-
-// identifier: IDENTIFIER {
-//     printf("This is identifier: %s\n", yylval.string);
-//     exit(0);
-// };
-
-// plus: PLUS {
-//     printf("This is plus\n");
-//     exit(0);
-// };
-
-// minus: MINUS {
-//     printf("This is minus\n");
-//     exit(0);
-// };
-
-// not: NOT {
-//     printf("This is not\n");
-//     exit(0);
-// };
-
-// increment: INCREMENT {
-//     printf("This is increment\n");
-//     exit(0);
-// };
-
-// l_parenthesis: L_PARENTHESIS {
-//     printf("This is left parenthesis\n");
-//     exit(0);
-// };
-
-// r_parenthesis: R_PARENTHESIS {
-//     printf("This is right parenthesis\n");
-//     exit(0);
-// };
-
-// times: TIMES {
-//     printf("This is times\n");
-//     exit(0);
-// };
-
-// divide: DIVIDE {
-//     printf("This is divide\n");
-//     exit(0);
-// };
-
-// equals: EQUALS {
-//     printf("This is equals\n");
-//     exit(0);
-// };
-
-// greater_than: GREATER_THAN {
-//     printf("This is greater than\n");
-//     exit(0);
-// };
-
-// lesser_than: LESSER_THAN {
-//     printf("This is lesser than\n");
-//     exit(0);
-// };
-
-// and: AND {
-//     printf("This is AND\n");
-//     exit(0);
-// };
-
-// or: OR {
-//     printf("This is OR\n");
-//     exit(0);
-// };
-
-// comma: COMMA {
-//     printf("This is comma\n");
-//     exit(0);
-// };
-
-// colon: COLON {
-//     printf("This is colon\n");
-//     exit(0);
-// };
-
-// l_bracket: L_BRACKET {
-//     printf("This is left bracket\n");
-//     exit(0);
-// };
-
-// r_bracket: R_BRACKET {
-//     printf("This is right bracket\n");
-//     exit(0);
-// };
-
-// is: IS {
-//     printf("This is IS\n");
-//     exit(0);
-// };
-
-// when: WHEN {
-//     printf("This is WHEN\n");
-//     exit(0);
-// };
-
-// then: THEN {
-//     printf("This is THEN\n");
-//     exit(0);
-// };
-
-// otherwise: OTHERWISE {
-//     printf("This is OTHERWISE\n");
-//     exit(0);
-// };
-
-// drive: DRIVE {
-//     printf("This is DRIVE\n");
-//     exit(0);
-// };
-
-// on: ON {
-//     printf("This is ON\n");
-//     exit(0);
-// };
-
-// signal: SIGNAL {
-//     printf("This is SIGNAL\n");
-//     exit(0);
-// };
-
-// play_until: PLAY_UNTIL {
-//     printf("This is PLAY_UNTIL\n");
-//     exit(0);
-// };
-
-// call: CALL {
-//     printf("This is CALL\n");
-//     exit(0);
-// };
-
-// break_line: BREAK_LINE {
-//     printf("This is BREAK_LINE\n");
-//     exit(0);
-// };
-
-// action: ACTION {
-//     printf("This is ACTION\n");
-//     exit(0);
-// };
 
 %%

@@ -547,8 +547,8 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "lexer.l"
 #line 3 "lexer.l"
+#include "nodes.h"
 #include "parser.tab.h"
-int yyerror(char *sp);
 
 #define MAX_STRING_LENGTH 100 // Define a maximum length for strings
 
@@ -1127,7 +1127,7 @@ YY_RULE_SETUP
 #line 95 "lexer.l"
 {
     printf("%s\n", yytext);
-    yyerror("Unknown token !!\n");
+    printf("Unknown token !!\n");
 }
 	YY_BREAK
 case 55:
@@ -2145,10 +2145,5 @@ void yyfree (void * ptr )
 
 int main() {
     yyparse();
-}
-
-int yyerror(char *sp) {
-    printf("%s\n", sp);
-    exit(1);
 }
 

@@ -2,4 +2,4 @@
 
 bison -d parser.y
 flex lexer.l
-gcc -o nfl lex.yy.c parser.tab.c
+g++ -o nfl lex.yy.c parser.tab.c nodes.cpp -lfl -std=c++11

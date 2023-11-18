@@ -1,7 +1,7 @@
 %option noyywrap
 %{
+#include "nodes.h"
 #include "parser.tab.h"
-int yyerror(char *sp);
 
 #define MAX_STRING_LENGTH 100 // Define a maximum length for strings
 
@@ -94,16 +94,11 @@ int parse_dynamic_token(char *token_str, int token_type) {
 
 . {
     printf("%s\n", yytext);
-    yyerror("Unknown token !!\n");
+    printf("Unknown token !!\n");
 }
 
 %%
 
 int main() {
     yyparse();
-}
-
-int yyerror(char *sp) {
-    printf("%s\n", sp);
-    exit(1);
 }
