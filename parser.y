@@ -91,6 +91,13 @@ Node* makeWhenConditionalWithTwoBlocks(Node *condition, Node *whenBlock, Node *o
     return new WhenConditional(0, move(children));
 }
 
+Node* makePlayUntil(Node *condition, Node *block) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(condition));
+    children.emplace_back(unique_ptr<Node>(block));
+    return new PlayUntil(0, move(children));
+}
+
 Node* makeBlock() {
     return new Block(0, vector<unique_ptr<Node>>());
 }
@@ -121,7 +128,7 @@ Node* makeBlock() {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program block statements statement when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program block statements statement play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
@@ -137,6 +144,7 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | play_until BREAK_LINE
     | when_conditional BREAK_LINE
     | variable_declaration BREAK_LINE
     | assignment BREAK_LINE
@@ -146,6 +154,8 @@ statement: BREAK_LINE { $$ = makeNoOp(); }
 block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
     | L_BRACKET statements R_BRACKET { $$ = $2; }
     ;
+
+play_until: PLAY_UNTIL boolean_expression block { $$ = makePlayUntil($2, $3); }
 
 when_conditional: WHEN boolean_expression THEN block { $$ = makeWhenConditionalWithOneBlock($2, $4); }
     | WHEN boolean_expression THEN block OTHERWISE block { $$ = makeWhenConditionalWithTwoBlocks($2, $4, $6); }

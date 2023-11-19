@@ -105,6 +105,35 @@ variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
     return 0; 
 }
 
+PlayUntil::PlayUntil(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> PlayUntil::evaluate(SymbolTable& symbolTable) {
+    // Evaluate condition
+    variant<int, string> condition = children[0]->evaluate(symbolTable);
+    
+    if (holds_alternative<string>(condition)) {
+        throw invalid_argument("Semantic: playuntil condition must be a boolean");
+    }
+
+    // While stop condition isn't met
+    while (!get<int>(condition)) {
+        // Execute block
+        children[1]->evaluate(symbolTable);
+
+        // Reevaluate condition
+        condition = children[0]->evaluate(symbolTable);
+
+        if (holds_alternative<string>(condition)) {
+            throw invalid_argument("Semantic: playuntil condition must be a boolean");
+        }
+    }
+
+    return 0; 
+}
+
 WhenConditional::WhenConditional(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);

@@ -1,7 +1,6 @@
-number paulo is 20 or 0
-when paulo then {
+number paulo is 0
+
+playuntil paulo > 2 {
     call(paulo)
-    call(paulo + 1)
-} otherwise {
-    call("Ele")
+    paulo is paulo + 1
 }
