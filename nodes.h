@@ -60,6 +60,17 @@ public:
     virtual variant<int, string> evaluate(SymbolTable& symbolTable);
 };
 
+using FunctionValue = tuple<SymbolType, Node*>;
+
+class FunctionTable {
+private:
+    static unordered_map<string, FunctionValue> table;
+
+public:
+    static void create(const string& name, SymbolType type, Node* nodePtr);
+    static FunctionValue get(const string& name);
+};
+
 // Node for a block of statements
 class Block : public Node {
 public:

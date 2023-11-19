@@ -91,6 +91,25 @@ variant<int, string> Node::evaluate(SymbolTable& symbolTable) {
     return 0;
 }
 
+void FunctionTable::create(const string& name, SymbolType type, Node* nodePtr) {
+    if (table.find(name) != table.end()) {
+        throw runtime_error("Function already declared");
+    }
+
+    table[name] = make_tuple(type, nodePtr);
+}
+
+FunctionValue FunctionTable::get(const string& name) {
+    auto it = table.find(name);
+    if (it == table.end()) {
+        throw runtime_error("Function not in table");
+    }
+
+    return it->second;
+}
+
+unordered_map<string, FunctionValue> FunctionTable::table;
+
 Block::Block(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
