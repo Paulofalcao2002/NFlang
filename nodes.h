@@ -67,6 +67,13 @@ public:
     variant<int, string> evaluate(SymbolTable& symbolTable) override;
 };
 
+// Node for when conditional operation
+class WhenConditional : public Node {
+public:
+    WhenConditional(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
 // Node for a variable declaration operation
 class VarDeclaration : public Node {
 public:

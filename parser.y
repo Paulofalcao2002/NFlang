@@ -76,6 +76,21 @@ Node* makeCall(Node *child) {
     return new Call(0, move(children));
 }
 
+Node* makeWhenConditionalWithOneBlock(Node *condition, Node *block) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(condition));
+    children.emplace_back(unique_ptr<Node>(block));
+    return new WhenConditional(0, move(children));
+}
+
+Node* makeWhenConditionalWithTwoBlocks(Node *condition, Node *whenBlock, Node *otherwiseBlock) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(condition));
+    children.emplace_back(unique_ptr<Node>(whenBlock));
+    children.emplace_back(unique_ptr<Node>(otherwiseBlock));
+    return new WhenConditional(0, move(children));
+}
+
 Node* makeBlock() {
     return new Block(0, vector<unique_ptr<Node>>());
 }
@@ -106,7 +121,7 @@ Node* makeBlock() {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program statements statement variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program block statements statement when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
@@ -122,9 +137,18 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | when_conditional BREAK_LINE
     | variable_declaration BREAK_LINE
     | assignment BREAK_LINE
     | call BREAK_LINE
+    ;
+
+block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
+    | L_BRACKET statements R_BRACKET { $$ = $2; }
+    ;
+
+when_conditional: WHEN boolean_expression THEN block { $$ = makeWhenConditionalWithOneBlock($2, $4); }
+    | WHEN boolean_expression THEN block OTHERWISE block { $$ = makeWhenConditionalWithTwoBlocks($2, $4, $6); }
     ;
 
 variable_declaration: TYPE IDENTIFIER { $$ = makePureVarDeclaration($1, $2); }

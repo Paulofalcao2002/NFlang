@@ -1,3 +1,7 @@
-number paulo
-paulo is signal()
-call(paulo)
+number paulo is 20 or 0
+when paulo then {
+    call(paulo)
+    call(paulo + 1)
+} otherwise {
+    call("Ele")
+}

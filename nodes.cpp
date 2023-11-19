@@ -105,6 +105,30 @@ variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
     return 0; 
 }
 
+WhenConditional::WhenConditional(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> WhenConditional::evaluate(SymbolTable& symbolTable) {
+    // Evaluate condition
+    variant<int, string> condition = children[0]->evaluate(symbolTable);
+
+    if (holds_alternative<string>(condition)) {
+        throw invalid_argument("Semantic: when condition must be a boolean");
+    }
+
+    // if condition execute if block, else is executed when condition isn´t met and 
+    // else block exists
+    if (get<int>(condition)) {
+        children[1]->evaluate(symbolTable);
+    } else if (children.size() > 2) {
+        children[2]->evaluate(symbolTable);
+    }
+
+    return 0; 
+}
+
 VarDeclaration::VarDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
