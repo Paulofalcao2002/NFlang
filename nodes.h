@@ -67,6 +67,13 @@ public:
     variant<int, string> evaluate(SymbolTable& symbolTable) override;
 };
 
+// Node for drive loop
+class Drive : public Node {
+public:
+    Drive(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
 // Node for playuntil loop
 class PlayUntil : public Node {
 public:

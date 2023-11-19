@@ -98,6 +98,16 @@ Node* makePlayUntil(Node *condition, Node *block) {
     return new PlayUntil(0, move(children));
 }
 
+Node* makeDrive(string *type, string *identifier, Node *leftValue, Node *rightValue, Node *block) {
+    vector<unique_ptr<Node>> children;
+
+    Node* variableDeclarationNode = makeVarDeclarationWithAssignment(type, identifier, leftValue);
+    children.emplace_back(unique_ptr<Node>(variableDeclarationNode));
+    children.emplace_back(unique_ptr<Node>(rightValue));
+    children.emplace_back(unique_ptr<Node>(block));
+    return new Drive(0, move(children));
+}
+
 Node* makeBlock() {
     return new Block(0, vector<unique_ptr<Node>>());
 }
@@ -128,7 +138,7 @@ Node* makeBlock() {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program block statements statement play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program block statements statement drive_loop play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
@@ -144,6 +154,7 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | drive_loop BREAK_LINE
     | play_until BREAK_LINE
     | when_conditional BREAK_LINE
     | variable_declaration BREAK_LINE
@@ -153,6 +164,10 @@ statement: BREAK_LINE { $$ = makeNoOp(); }
 
 block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
     | L_BRACKET statements R_BRACKET { $$ = $2; }
+    ;
+
+drive_loop: DRIVE TYPE IDENTIFIER ON L_PARENTHESIS boolean_expression COMMA boolean_expression R_PARENTHESIS block
+    { $$ =  makeDrive($2, $3, $6, $8, $10); }
     ;
 
 play_until: PLAY_UNTIL boolean_expression block { $$ = makePlayUntil($2, $3); }

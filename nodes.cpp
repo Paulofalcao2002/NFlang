@@ -105,6 +105,57 @@ variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
     return 0; 
 }
 
+Drive::Drive(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> Drive::evaluate(SymbolTable& symbolTable) {
+    // Evaluates the variable declaration and assignment
+    children[0]->evaluate(symbolTable);
+
+
+    variant<int, string> identifier = children[0]->children[0]->value;
+
+    if (holds_alternative<int>(identifier)) {
+        throw invalid_argument("Semantic: drive identifier must be a string");
+    }
+
+    // Gets loop variable value
+    variant<int, string> driveVar = symbolTable.get(get<string>(identifier));
+
+    // Temporary
+    if (holds_alternative<string>(driveVar)) {
+        throw invalid_argument("Semantic: drive loop value must be a number");
+    }
+
+    // Gets limit value
+    variant<int, string> limitValue = children[1]->evaluate(symbolTable);
+
+    // Temporary
+    if (holds_alternative<string>(limitValue)) {
+        throw invalid_argument("Semantic: drive loop value must be a number");
+    }
+
+    while (get<int>(driveVar) <= get<int>(limitValue)) {
+        // Evaluates loop block
+        children[2]->evaluate(symbolTable);
+
+        // Increments loops variable
+        symbolTable.set(get<string>(identifier), get<int>(driveVar) + 1);
+
+        // Gets loop variable value
+        driveVar = symbolTable.get(get<string>(identifier));
+
+        // Temporary
+        if (holds_alternative<string>(driveVar)) {
+            throw invalid_argument("Semantic: drive loop value must be a number");
+        }
+    }
+
+    return 0; 
+}
+
 PlayUntil::PlayUntil(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);

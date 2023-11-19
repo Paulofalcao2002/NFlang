@@ -1,6 +1,4 @@
-number paulo is 0
 
-playuntil paulo > 2 {
-    call(paulo)
-    paulo is paulo + 1
+drive number i on (0, 5) {
+    call(i)
 }
