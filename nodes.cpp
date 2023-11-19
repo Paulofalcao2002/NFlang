@@ -1,43 +1,90 @@
 #include "nodes.h"
 #include <iostream>
+#include <limits> 
 #include <variant>
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
 using namespace std;
 
+SymbolType getSymbolTypeFromString(const string& type) {
+    if (type == "athlete") {
+        return SymbolType::ATHLETE;
+    }
+    if (type == "play") {
+        return SymbolType::PLAY;
+    }
+    if (type == "number") {
+        return SymbolType::NUMBER;
+    }
+    if (type == "down") {
+        return SymbolType::DOWN;
+    }
+    return SymbolType::EMPTY;
+}
+
 SymbolTable::SymbolTable() {}
 
-void SymbolTable::create(const string& symbol) {
+void SymbolTable::create(const string& symbol, SymbolType type) {
     if (table.find(symbol) != table.end()) {
         throw runtime_error("Symbol already declared");
     }
 
-    table[symbol] = 0;
+    if (type == SymbolType::ATHLETE) {
+        table[symbol] = make_pair(type, "");
+    } else if (type == SymbolType::PLAY) {
+        table[symbol] = make_pair(type, "");
+    } else if (type == SymbolType::NUMBER) {
+        table[symbol] = make_pair(type, 0);
+    } else if (type == SymbolType::DOWN) {
+        table[symbol] = make_pair(type, "firstdown");
+    } else {
+        table[symbol] = make_pair(type, 0);
+    }
 }
 
-SymbolValue SymbolTable::get(const string& symbol) {
+variant<int, string> SymbolTable::get(const string& symbol) {
     auto it = table.find(symbol);
     if (it == table.end()) {
         throw runtime_error("Symbol not in table");
     }
-    return it->second;
+
+    return it->second.second;
 }
 
-void SymbolTable::set(const string& symbol, const SymbolValue& value) {
+void SymbolTable::set(const string& symbol, const variant<int, string> value) {
     auto it = table.find(symbol);
     if (it == table.end()) {
         throw runtime_error("Symbol not in the table");
     }
 
-    // SymbolType symbolType = it->second.first;
+    SymbolType symbolType = it->second.first;
 
-    // if ((symbolType == SymbolType::Int && !holds_alternative<int>(value)) ||
-    //     (symbolType == SymbolType::String && !holds_alternative<string>(value))) {
-    //     throw runtime_error("Type mismatch");
+    if (symbolType == SymbolType::ATHLETE && !holds_alternative<string>(value)) {
+        throw runtime_error("Type mismatch for athlete type variable");
+    }
+
+    // TODO
+    // if (type == SymbolType::PLAY && !holds_alternative<string>(value)) {
+    //     throw runtime_error("Type mismatch for athlete type variable");
     // }
 
-    it->second = value;
+    if (symbolType == SymbolType::NUMBER && !holds_alternative<int>(value)) {
+        throw runtime_error("Type mismatch for number type variable");
+    }
+
+    if (symbolType == SymbolType::DOWN && holds_alternative<string>(value)) {
+        const string* strPtr = get_if<string>(&value);
+        string strValue = *strPtr;
+        if (strValue != "firstdown" && strValue != "seconddown" &&
+            strValue != "thirddown" && strValue != "fourthdown") {
+            throw runtime_error("Type mismatch for DOWN type variable");
+        }
+    } else if (symbolType == SymbolType::DOWN && holds_alternative<int>(value)) {
+        throw runtime_error("Type mismatch for DOWN type variable");
+    }
+
+    it->second.second = value;
 }
 
 variant<int, string> Node::evaluate(SymbolTable& symbolTable) {
@@ -58,6 +105,32 @@ variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
     return 0; 
 }
 
+VarDeclaration::VarDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> VarDeclaration::evaluate(SymbolTable& symbolTable) {
+    // Variable declaration, defines the type of the variable and can assign a value
+    variant<int, string> identifier = children[0]->value;
+
+    if (holds_alternative<int>(identifier)) {
+        throw invalid_argument("Semantic: Identifier value must be of type string");
+    }
+
+    symbolTable.create(get<string>(identifier), getSymbolTypeFromString(get<string>(this->value)));
+
+    if (children.size() == 1) {
+        return 0;
+    }
+
+    variant<int, string> value = children[1]->evaluate(symbolTable);
+
+    symbolTable.set(get<string>(identifier), value);
+
+    return 0;
+}
+
 Assignment::Assignment(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
@@ -70,8 +143,6 @@ variant<int, string> Assignment::evaluate(SymbolTable& symbolTable) {
     if (holds_alternative<int>(identifier)) {
         throw invalid_argument("Semantic: Identifier value must be of type string");
     }
-
-    symbolTable.create(get<string>(identifier)); // TEMPORARY
 
     variant<int, string> value = children[1]->evaluate(symbolTable);
 
@@ -269,6 +340,21 @@ variant<int, string> UnOp::evaluate(SymbolTable& symbolTable) {
     }
 
     return result;
+}
+
+Signal::Signal(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> Signal::evaluate(SymbolTable& symbolTable) {
+    // Clear input buffer
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    // Returns the numeric value
+    int input;
+    cin >> input;
+    return input;
 }
 
 Number::Number(variant<int, string> value, vector<unique_ptr<Node>> children) {

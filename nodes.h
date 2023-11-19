@@ -27,16 +27,25 @@ enum class UnOperation {
     INCREMENT
 };
 
-using SymbolValue = variant<int, string>;
-using SymbolTableType = unordered_map<string, SymbolValue>;
+enum class SymbolType { 
+    ATHLETE, 
+    PLAY,
+    NUMBER,
+    DOWN,
+    EMPTY 
+};
+
+SymbolType getSymbolTypeFromString(const string& type);
+
+using SymbolTableType = unordered_map<string, pair<SymbolType, variant<int, string>>>;
 
 class SymbolTable {
 public:
     SymbolTable();
 
-    void create(const string& symbol);
-    SymbolValue get(const string& symbol);
-    void set(const string& symbol, const SymbolValue& value);
+    void create(const string& symbol, SymbolType type);
+    variant<int, string> get(const string& symbol);
+    void set(const string& symbol, const variant<int, string> value);
 
 private:
     SymbolTableType table;
@@ -57,6 +66,14 @@ public:
     Block(variant<int, string> value, vector<unique_ptr<Node>> children);
     variant<int, string> evaluate(SymbolTable& symbolTable) override;
 };
+
+// Node for a variable declaration operation
+class VarDeclaration : public Node {
+public:
+    VarDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
 
 // Node for a assignment operation
 class Assignment : public Node {
@@ -83,6 +100,14 @@ public:
 class UnOp : public Node {
 public:
     UnOp(variant<int, string> value, vector<unique_ptr<Node>> children);
+
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
+// Node for a numeric value
+class Signal : public Node {
+public:
+    Signal(variant<int, string> value, vector<unique_ptr<Node>> children);
 
     variant<int, string> evaluate(SymbolTable& symbolTable) override;
 };

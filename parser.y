@@ -18,6 +18,10 @@ Node* makeNoOp() {
     return new Number(0, vector<unique_ptr<Node>>());
 }
 
+Node* makeSignal() {
+    return new Signal(0, vector<unique_ptr<Node>>());
+}
+
 Node* makeString(string *str) {
     return new String(*str, vector<unique_ptr<Node>>());
 }
@@ -41,6 +45,21 @@ Node* makeBinOp(int operation, Node *left, Node *right) {
     children.emplace_back(unique_ptr<Node>(left));
     children.emplace_back(unique_ptr<Node>(right));
     return new BinOp(operation, move(children));
+}
+
+Node* makePureVarDeclaration(string *type, string *identifier) {
+    vector<unique_ptr<Node>> children;
+    Node* identifierNode = makeIdentifier(identifier);
+    children.emplace_back(unique_ptr<Node>(identifierNode));
+    return new VarDeclaration(*type, move(children));
+}
+
+Node* makeVarDeclarationWithAssignment(string *type, string *identifier, Node *expression) {
+    vector<unique_ptr<Node>> children;
+    Node* identifierNode = makeIdentifier(identifier);
+    children.emplace_back(unique_ptr<Node>(identifierNode));
+    children.emplace_back(unique_ptr<Node>(expression));
+    return new VarDeclaration(*type, move(children));
 }
 
 Node* makeAssignment(string *identifier, Node *expression) {
@@ -87,9 +106,9 @@ Node* makeBlock() {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program statements statement assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program statements statement variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
-%type <stringValue> IDENTIFIER STRING
+%type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
 %%
 
@@ -103,8 +122,13 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | variable_declaration BREAK_LINE
     | assignment BREAK_LINE
     | call BREAK_LINE
+    ;
+
+variable_declaration: TYPE IDENTIFIER { $$ = makePureVarDeclaration($1, $2); }
+    | TYPE IDENTIFIER IS boolean_expression { $$ = makeVarDeclarationWithAssignment($1, $2, $4); }
     ;
 
 assignment: IDENTIFIER IS boolean_expression { $$ = makeAssignment($1, $3); };
@@ -143,6 +167,8 @@ factor: NUMBER { $$= makeNumber($1); }
     | NOT factor { $$ = makeUnOp((int) UnOperation::NOT, $2);  }
     | IDENTIFIER { $$ = makeIdentifier($1); }
     | STRING { $$ = makeString($1); }
+    | DOWN { $$ = makeString($1); }
+    | SIGNAL L_PARENTHESIS R_PARENTHESIS { $$ = makeSignal(); }
     ;
 
 %%
