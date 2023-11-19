@@ -2,6 +2,8 @@
 #include <stdio.h>    
 #include <stdlib.h>
 #include <iostream>
+#include <string>
+
 #include "nodes.h"
 using namespace std;
 
@@ -12,8 +14,20 @@ void yyerror(const char *s) {
     fprintf(stderr, "Error: %s\n", s);
 }
 
+Node* makeNoOp() {
+    return new Number(0, vector<unique_ptr<Node>>());
+}
+
+Node* makeString(string *str) {
+    return new String(*str, vector<unique_ptr<Node>>());
+}
+
 Node* makeNumber(int value) {
     return new Number(value, vector<unique_ptr<Node>>());
+}
+
+Node* makeIdentifier(string *identifier) {
+    return new Identifier(*identifier, vector<unique_ptr<Node>>());
 }
 
 Node* makeUnOp(int operation, Node *child) {
@@ -29,11 +43,28 @@ Node* makeBinOp(int operation, Node *left, Node *right) {
     return new BinOp(operation, move(children));
 }
 
+Node* makeAssignment(string *identifier, Node *expression) {
+    vector<unique_ptr<Node>> children;
+    Node* identifierNode = makeIdentifier(identifier);
+    children.emplace_back(unique_ptr<Node>(identifierNode));
+    children.emplace_back(unique_ptr<Node>(expression));
+    return new Assignment(0, move(children));
+}
+
+Node* makeCall(Node *child) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(child));
+    return new Call(0, move(children));
+}
+
+Node* makeBlock() {
+    return new Block(0, vector<unique_ptr<Node>>());
+}
 
 %}
 
 %union {
-    char *string;
+    string *stringValue;
     int number;
     Node *nodePtr;
 };
@@ -56,12 +87,29 @@ Node* makeBinOp(int operation, Node *left, Node *right) {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program statements statement assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
+%type <stringValue> IDENTIFIER STRING
 
 %%
 
-program: boolean_expression { printf("result: %d\n", $1->evaluate()); };
+program: statements { 
+    SymbolTable* symbolTable = new SymbolTable();
+    $1->evaluate(*symbolTable); 
+};
+
+statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<Node>($1)); }
+    | statements statement  { $1->children.emplace_back(unique_ptr<Node>($2)); }
+    ;
+
+statement: BREAK_LINE { $$ = makeNoOp(); }
+    | assignment BREAK_LINE
+    | call BREAK_LINE
+    ;
+
+assignment: IDENTIFIER IS boolean_expression { $$ = makeAssignment($1, $3); };
+
+call: CALL L_PARENTHESIS boolean_expression R_PARENTHESIS { $$ = makeCall($3); };
 
 boolean_expression: boolean_expression OR boolean_term { $$= makeBinOp((int) BinOperation::OR, $1, $3); }
     | boolean_term { $$= $1; }
@@ -93,6 +141,8 @@ factor: NUMBER { $$= makeNumber($1); }
     | MINUS factor { $$ = makeUnOp((int) UnOperation::MINUS, $2);  }
     | INCREMENT factor {$$ = makeUnOp((int) UnOperation::INCREMENT, $2); }
     | NOT factor { $$ = makeUnOp((int) UnOperation::NOT, $2);  }
+    | IDENTIFIER { $$ = makeIdentifier($1); }
+    | STRING { $$ = makeString($1); }
     ;
 
 %%

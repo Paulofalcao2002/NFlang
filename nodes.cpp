@@ -1,128 +1,316 @@
 #include "nodes.h"
 #include <iostream>
+#include <variant>
+#include <string>
+#include <stdexcept>
+#include <unordered_map>
+using namespace std;
 
-int Node::evaluate() {
+SymbolTable::SymbolTable() {}
+
+void SymbolTable::create(const string& symbol) {
+    if (table.find(symbol) != table.end()) {
+        throw runtime_error("Symbol already declared");
+    }
+
+    table[symbol] = 0;
+}
+
+SymbolValue SymbolTable::get(const string& symbol) {
+    auto it = table.find(symbol);
+    if (it == table.end()) {
+        throw runtime_error("Symbol not in table");
+    }
+    return it->second;
+}
+
+void SymbolTable::set(const string& symbol, const SymbolValue& value) {
+    auto it = table.find(symbol);
+    if (it == table.end()) {
+        throw runtime_error("Symbol not in the table");
+    }
+
+    // SymbolType symbolType = it->second.first;
+
+    // if ((symbolType == SymbolType::Int && !holds_alternative<int>(value)) ||
+    //     (symbolType == SymbolType::String && !holds_alternative<string>(value))) {
+    //     throw runtime_error("Type mismatch");
+    // }
+
+    it->second = value;
+}
+
+variant<int, string> Node::evaluate(SymbolTable& symbolTable) {
     return 0;
 }
 
-BinOp::BinOp(int value, vector<unique_ptr<Node>> children) {
+Block::Block(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
 }
 
-int BinOp::evaluate() {
+variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
+    // Evaluate each of the childs
+    for (const auto& child : children) {
+        child->evaluate(symbolTable);
+    }
+
+    return 0; 
+}
+
+Assignment::Assignment(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> Assignment::evaluate(SymbolTable& symbolTable) {
+    // Assign the value of the expression to a variable in the symbol table
+    variant<int, string> identifier = children[0]->value;
+
+    if (holds_alternative<int>(identifier)) {
+        throw invalid_argument("Semantic: Identifier value must be of type string");
+    }
+
+    symbolTable.create(get<string>(identifier)); // TEMPORARY
+
+    variant<int, string> value = children[1]->evaluate(symbolTable);
+
+    symbolTable.set(get<string>(identifier), value);
+
+    return 0;
+}
+
+Call::Call(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> Call::evaluate(SymbolTable& symbolTable) {
+    // Prints in the std out the value of the expression
+    variant<int, string> child = children[0]->evaluate(symbolTable);
+
+    if (holds_alternative<string>(child)) {
+        cout << get<string>(child) << endl;
+    } else {
+        cout << get<int>(child) << endl;
+    }
+
+    return 0;
+}
+
+
+BinOp::BinOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> BinOp::evaluate(SymbolTable& symbolTable) {
     int result = 0; // Initialize result, change based on your logic
 
-    switch (this->value) {
+    if (holds_alternative<string>(this->value)) {
+        throw invalid_argument("Unexpected variant type");
+    }
+
+    variant<int, string> left_child = children[0]->evaluate(symbolTable);
+    variant<int, string> right_child = children[1]->evaluate(symbolTable);
+
+    switch (get<int>(this->value)) {
         case (int) BinOperation::PLUS:
-            // Handle PLUS operation
-            // Example: Evaluate the sum of the two children nodes
-            result = children[0]->evaluate() + children[1]->evaluate();
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform + operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform + operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) + get<int>(right_child);
             break;
         
         case (int) BinOperation::MINUS:
-            // Handle MINUS operation
-            // Example: Evaluate the subtraction of the two children nodes
-            result = children[0]->evaluate() - children[1]->evaluate();
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform - operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform - operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) - get<int>(right_child);
             break;
 
         case (int) BinOperation::TIMES:
-            // Handle TIMES operation
-            // Example: Evaluate the multiplication of the two children nodes
-            result = children[0]->evaluate() * children[1]->evaluate();
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform * operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform * operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) * get<int>(right_child);
             break;
 
         case (int) BinOperation::DIVIDE:
-            // Handle DIVIDE operation
-            // Example: Evaluate the division of the two children nodes
-            result = children[0]->evaluate() / children[1]->evaluate();
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform / operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform / operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) / get<int>(right_child);
             break;
 
         case (int) BinOperation::EQUALS:
-            // Handle EQUALS operation
-            // Example: Evaluate if the values of the children nodes are equal
-            result = children[0]->evaluate() == children[1]->evaluate() ? 1 : 0;
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform equals operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform equals operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) == get<int>(right_child) ? 1 : 0;
             break;
 
         case (int) BinOperation::GREATER_THAN:
-            // Handle GREATER_THAN operation
-            // Example: Evaluate if the value of the first child node is greater than the second child node
-            result = children[0]->evaluate() > children[1]->evaluate() ? 1 : 0;
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform > operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform > operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) > get<int>(right_child) ? 1 : 0;
             break;
 
         case (int) BinOperation::LESSER_THAN:
-            // Handle LESSER_THAN operation
-            // Example: Evaluate if the value of the first child node is lesser than the second child node
-            result = children[0]->evaluate() < children[1]->evaluate() ? 1 : 0;
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform < operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform < operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) < get<int>(right_child) ? 1 : 0;
             break;
 
         case (int) BinOperation::AND:
-            // Handle AND operation
-            // Example: Evaluate the logical AND of the two children nodes
-            result = children[0]->evaluate() && children[1]->evaluate() ? 1 : 0;
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform and operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform and operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) && get<int>(right_child) ? 1 : 0;
             break;
 
         case (int) BinOperation::OR:
-            // Handle OR operation
-            // Example: Evaluate the logical OR of the two children nodes
-            result = children[0]->evaluate() || children[1]->evaluate() ? 1 : 0;
+            if (holds_alternative<string>(left_child)) {
+                throw invalid_argument("Semantic: Cannot perform or operation in string: " + get<string>(left_child));
+            }
+            if (holds_alternative<string>(right_child)) {
+                throw invalid_argument("Semantic: Cannot perform or operation in string: " + get<string>(right_child));
+            }
+
+            result = get<int>(left_child) || get<int>(right_child) ? 1 : 0;
             break;
 
         default:
-            // Handle default case if needed
             break;
     }
 
     return result;
 }
 
-UnOp::UnOp(int value, vector<unique_ptr<Node>> children) {
+UnOp::UnOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
 }
 
-int UnOp::evaluate() {
+variant<int, string> UnOp::evaluate(SymbolTable& symbolTable) {
     int result = 0; // Initialize result, change based on your logic
 
-    switch (this->value) {
+    if (holds_alternative<string>(this->value)) {
+        throw invalid_argument("Unexpected variant type");
+    }
+
+    variant<int, string> child = children[0]->evaluate(symbolTable);
+
+    switch (get<int>(this->value)) {
         case (int) UnOperation::PLUS:
-            // Handle PLUS operation
-            // Example: Evaluate the value of the single child node
-            result = children[0]->evaluate();
+            if (holds_alternative<string>(child)) {
+                throw invalid_argument("Semantic: Cannot perform + unary operation in string: " + get<string>(child));
+            }
+            result = get<int>(child);
             break;
         
         case (int) UnOperation::MINUS:
-            // Handle MINUS operation
-            // Example: Evaluate the negation of the value of the single child node
-            result = -children[0]->evaluate();
+            if (holds_alternative<string>(child)) {
+                throw invalid_argument("Semantic: Cannot perform - unary operation in string: " + get<string>(child));
+            }
+            result = -get<int>(child);
             break;
 
         case (int) UnOperation::NOT:
-            // Handle NOT operation
-            // Example: Evaluate the logical NOT of the value of the single child node
-            result = !(children[0]->evaluate());
+            if (holds_alternative<string>(child)) {
+                throw invalid_argument("Semantic: Cannot perform not unary operation in string: " + get<string>(child));
+            }
+            result = !get<int>(child);
             break;
 
         case (int) UnOperation::INCREMENT:
-            // Handle INCREMENT operation
-            // Example: Evaluate the value of the single child node incremented by 1
-            result = children[0]->evaluate() + 1;
+            if (holds_alternative<string>(child)) {
+                throw invalid_argument("Semantic: Cannot perform >> unary operation in string: " + get<string>(child));
+            }
+            result = get<int>(child) + 1;
             break;
 
         default:
-            // Handle default case if needed
             break;
     }
 
     return result;
 }
 
-Number::Number(int value, vector<unique_ptr<Node>> children) {
+Number::Number(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
 }
 
-int Number::evaluate() {
+variant<int, string> Number::evaluate(SymbolTable& symbolTable) {
     // Returns the numeric value
+    return this->value;
+}
+
+String::String(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> String::evaluate(SymbolTable& symbolTable) {
+    // Returns the string value
+    return this->value;
+}
+
+Identifier::Identifier(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> Identifier::evaluate(SymbolTable& symbolTable) {
+    // Returns the identifier value in the symbolTable
+    if (holds_alternative<int>(this->value)) {
+        throw invalid_argument("Semantic: Identifier value must be of type string");
+    }
+
+    return symbolTable.get(get<string>(this->value));
+}
+
+NoOp::NoOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> NoOp::evaluate(SymbolTable& symbolTable) {
+    // Returns 0
     return this->value;
 }

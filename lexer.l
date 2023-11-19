@@ -2,6 +2,7 @@
 %{
 #include "nodes.h"
 #include "parser.tab.h"
+#include <string>
 
 #define MAX_STRING_LENGTH 100 // Define a maximum length for strings
 
@@ -16,12 +17,12 @@ int parse_dynamic_token(char *token_str, int token_type) {
     if (token_type == STRING) {
         strncpy(stored_string, token_str + 1, strlen(token_str) - 2); // Store the string value (excluding quotes)
         stored_string[strlen(token_str) - 2] = '\0'; // Add null terminator
-        yylval.string = strdup(stored_string); // Store the string value in yylval
+        yylval.stringValue = new string(strdup(stored_string)); // Store the string value in yylval
         return STRING; // Return string token
     }
 
     // Store the token string (for all the remaining tokens, no transformation is needed)
-    yylval.string = token_str; 
+    yylval.stringValue = new string(token_str); 
 
     return token_type; 
 }
