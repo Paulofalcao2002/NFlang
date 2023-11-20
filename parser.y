@@ -108,6 +108,43 @@ Node* makeDrive(string *type, string *identifier, Node *leftValue, Node *rightVa
     return new Drive(0, move(children));
 }
 
+Node* makeFunctionDeclarationWithoutArgs(string *type, string *identifier, Node *block) {
+    vector<unique_ptr<Node>> children;
+
+    Node* functionVarDec = makePureVarDeclaration(type, identifier);
+    children.emplace_back(unique_ptr<Node>(functionVarDec));
+    children.emplace_back(unique_ptr<Node>(block));
+    return new FunctionDeclaration(0, move(children));
+}
+
+Node* makeFunctionDeclarationWithArgs(string *type, string *identifier, Node *arguments, Node *block) {
+    vector<unique_ptr<Node>> children;
+
+    Node* functionVarDec = makePureVarDeclaration(type, identifier);
+    children.emplace_back(unique_ptr<Node>(functionVarDec));
+
+    for (auto& argument : arguments->children) {
+        children.emplace_back(std::move(argument));
+    }
+
+    children.emplace_back(unique_ptr<Node>(block));
+    return new FunctionDeclaration(0, move(children));
+}
+
+Node* makeFunctionCallWithoutArgs(string *identifier) {
+    return new FunctionCall(*identifier, vector<unique_ptr<Node>>());
+}
+
+Node* makeFunctionCallWithArgs(string *identifier, Node *arguments) {
+    vector<unique_ptr<Node>> children;
+
+    for (auto& argument : arguments->children) {
+        children.emplace_back(std::move(argument));
+    }
+
+    return new FunctionCall(*identifier, move(children));
+}
+
 Node* makeBlock() {
     return new Block(0, vector<unique_ptr<Node>>());
 }
@@ -138,7 +175,7 @@ Node* makeBlock() {
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program block statements statement drive_loop play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program block statements statement func_declaration declaration_arguments call_arguments drive_loop play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
@@ -154,6 +191,7 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | func_declaration BREAK_LINE
     | drive_loop BREAK_LINE
     | play_until BREAK_LINE
     | when_conditional BREAK_LINE
@@ -164,6 +202,18 @@ statement: BREAK_LINE { $$ = makeNoOp(); }
 
 block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
     | L_BRACKET statements R_BRACKET { $$ = $2; }
+    ;
+
+func_declaration: ACTION TYPE IDENTIFIER L_PARENTHESIS R_PARENTHESIS block 
+    { $$ = makeFunctionDeclarationWithoutArgs($2, $3, $6); }
+    | ACTION TYPE IDENTIFIER L_PARENTHESIS declaration_arguments R_PARENTHESIS block
+    { $$ = makeFunctionDeclarationWithArgs($2, $3, $5, $7); }
+    ;
+
+declaration_arguments: TYPE IDENTIFIER 
+    { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<Node>(makePureVarDeclaration($1, $2))); }
+    | declaration_arguments COMMA TYPE IDENTIFIER
+    { $1->children.emplace_back(makePureVarDeclaration($3, $4)); }
     ;
 
 drive_loop: DRIVE TYPE IDENTIFIER ON L_PARENTHESIS boolean_expression COMMA boolean_expression R_PARENTHESIS block
@@ -180,7 +230,14 @@ variable_declaration: TYPE IDENTIFIER { $$ = makePureVarDeclaration($1, $2); }
     | TYPE IDENTIFIER IS boolean_expression { $$ = makeVarDeclarationWithAssignment($1, $2, $4); }
     ;
 
-assignment: IDENTIFIER IS boolean_expression { $$ = makeAssignment($1, $3); };
+assignment: IDENTIFIER IS boolean_expression { $$ = makeAssignment($1, $3); }
+    | IDENTIFIER L_PARENTHESIS R_PARENTHESIS { $$ = makeFunctionCallWithoutArgs($1); }
+    | IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS { $$ = makeFunctionCallWithArgs($1, $3); }
+    ;
+
+call_arguments: boolean_expression { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<Node>($1)); }
+    | call_arguments COMMA boolean_expression { $1->children.emplace_back($3); }
+    ;
 
 call: CALL L_PARENTHESIS boolean_expression R_PARENTHESIS { $$ = makeCall($3); };
 
@@ -208,6 +265,7 @@ term: term TIMES factor { $$ = makeBinOp((int) BinOperation::TIMES, $1, $3); }
     | factor { $$ = $1; }
     ;
 
+// TODO: Add function call in factor
 factor: NUMBER { $$= makeNumber($1); }
     | L_PARENTHESIS boolean_expression R_PARENTHESIS {$$ = $2; }
     | PLUS factor { $$ = makeUnOp((int) UnOperation::PLUS, $2); }

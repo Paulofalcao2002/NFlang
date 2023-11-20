@@ -110,6 +110,75 @@ FunctionValue FunctionTable::get(const string& name) {
 
 unordered_map<string, FunctionValue> FunctionTable::table;
 
+FunctionDeclaration::FunctionDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> FunctionDeclaration::evaluate(SymbolTable& symbolTable) {
+    variant<int, string> functionName = children[0]->children[0]->value;
+
+    if (holds_alternative<int>(functionName)) {
+        throw invalid_argument("Semantic: function identifier in declaration must be a string");
+    }
+
+    variant<int, string> functionType = children[0]->value;
+
+    if (holds_alternative<int>(functionType)) {
+        throw invalid_argument("Semantic: function type in declaration must be a string");
+    }
+
+    FunctionTable::create(get<string>(functionName), getSymbolTypeFromString(get<string>(functionType)), this);
+
+    return 0; 
+}
+
+FunctionCall::FunctionCall(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+}
+
+variant<int, string> FunctionCall::evaluate(SymbolTable& symbolTable) {
+    if (holds_alternative<int>(this->value)) {
+        throw invalid_argument("Semantic: function identifier in call must be a string");
+    }
+
+    // Retrieve function declaration
+    FunctionValue functionDeclaration = FunctionTable::get(get<string>(this->value));
+
+    // Create symbol table for function
+    SymbolTable* functionSymbolTable = new SymbolTable();
+
+    int i = 0;
+    Node* functionDeclarationNode = get<Node*>(functionDeclaration);
+
+    if (functionDeclarationNode->children.size() - 2 != children.size()) {
+        throw invalid_argument("Semantic: function being called with invalid number or arguments");
+    }
+
+    for (auto& child: children) {
+        functionDeclarationNode->children[i + 1]->evaluate(*functionSymbolTable);
+        variant<int, string> argument = child->evaluate(symbolTable);
+
+        if (holds_alternative<int>(functionDeclarationNode->children[i + 1]->children[0]->value)) {
+            throw invalid_argument("Semantic: argument name must be an identifier string");
+        }
+
+        functionSymbolTable->set(
+            get<string>(functionDeclarationNode->children[i + 1]->children[0]->value),
+            argument
+        );
+
+        i++;
+    }
+
+    functionDeclarationNode->children[i + 1]->evaluate(*functionSymbolTable);
+
+    // TODO: Return
+
+    return 0; 
+}
+
 Block::Block(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);

@@ -71,6 +71,20 @@ public:
     static FunctionValue get(const string& name);
 };
 
+// Node for a function declaration
+class FunctionDeclaration : public Node {
+public:
+    FunctionDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
+// Node for a function call
+class FunctionCall : public Node {
+public:
+    FunctionCall(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+};
+
 // Node for a block of statements
 class Block : public Node {
 public:

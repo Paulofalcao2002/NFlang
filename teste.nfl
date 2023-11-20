@@ -1,4 +1,9 @@
+action number square(number a) {
+    number squaredValue is a * a
+    call(squaredValue)
+}
+
 
 drive number i on (0, 5) {
-    call(i)
+    square(i)
 }
