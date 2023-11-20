@@ -1,9 +1,12 @@
-action number square(number a) {
-    number squaredValue is a * a
-    call(squaredValue)
+action number fibo(number n) {
+    when n < 2 then {
+        result n
+    }
+
+    result fibo(n - 1) + fibo(n - 2)
 }
 
 
-drive number i on (0, 5) {
-    square(i)
+drive number i on (1, 7) {
+    call(fibo(i))
 }

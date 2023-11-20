@@ -145,6 +145,13 @@ Node* makeFunctionCallWithArgs(string *identifier, Node *arguments) {
     return new FunctionCall(*identifier, move(children));
 }
 
+Node* makeResult(Node *expression) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(unique_ptr<Node>(expression));
+
+    return new Result(0, move(children));
+}
+
 Node* makeBlock() {
     return new Block(0, vector<unique_ptr<Node>>());
 }
@@ -170,12 +177,12 @@ Node* makeBlock() {
 %token SIGNAL CALL
 
 // Code block tokens (If, else, for, while)
-%token WHEN THEN OTHERWISE DRIVE ON PLAY_UNTIL BREAK_LINE ACTION L_BRACKET R_BRACKET  
+%token WHEN THEN OTHERWISE DRIVE ON PLAY_UNTIL BREAK_LINE ACTION L_BRACKET R_BRACKET RESULT
 
 // Dynamic values tokens
 %token IDENTIFIER NUMBER STRING POSITION DOWN TYPE
 
-%type <nodePtr> program block statements statement func_declaration declaration_arguments call_arguments drive_loop play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> program block statements statement result func_declaration declaration_arguments call_arguments drive_loop play_until when_conditional variable_declaration assignment call boolean_expression boolean_term relative_expression expression term factor
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
 
@@ -191,6 +198,7 @@ statements: statement { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<N
     ;
 
 statement: BREAK_LINE { $$ = makeNoOp(); }
+    | result BREAK_LINE
     | func_declaration BREAK_LINE
     | drive_loop BREAK_LINE
     | play_until BREAK_LINE
@@ -203,6 +211,8 @@ statement: BREAK_LINE { $$ = makeNoOp(); }
 block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
     | L_BRACKET statements R_BRACKET { $$ = $2; }
     ;
+
+result: RESULT boolean_expression { $$ = makeResult($2); };
 
 func_declaration: ACTION TYPE IDENTIFIER L_PARENTHESIS R_PARENTHESIS block 
     { $$ = makeFunctionDeclarationWithoutArgs($2, $3, $6); }
@@ -265,7 +275,6 @@ term: term TIMES factor { $$ = makeBinOp((int) BinOperation::TIMES, $1, $3); }
     | factor { $$ = $1; }
     ;
 
-// TODO: Add function call in factor
 factor: NUMBER { $$= makeNumber($1); }
     | L_PARENTHESIS boolean_expression R_PARENTHESIS {$$ = $2; }
     | PLUS factor { $$ = makeUnOp((int) UnOperation::PLUS, $2); }
@@ -276,6 +285,8 @@ factor: NUMBER { $$= makeNumber($1); }
     | STRING { $$ = makeString($1); }
     | DOWN { $$ = makeString($1); }
     | SIGNAL L_PARENTHESIS R_PARENTHESIS { $$ = makeSignal(); }
+    | IDENTIFIER L_PARENTHESIS R_PARENTHESIS { $$ = makeFunctionCallWithoutArgs($1); }
+    | IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS { $$ = makeFunctionCallWithArgs($1, $3); }
     ;
 
 %%

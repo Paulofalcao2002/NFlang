@@ -58,6 +58,7 @@ int parse_dynamic_token(char *token_str, int token_type) {
 "call" {return CALL;}
 "\n" {return BREAK_LINE;}
 "action" {return ACTION;}
+"result" {return RESULT;}
 "athlete" {return parse_dynamic_token(yytext, TYPE);}
 "play" {return parse_dynamic_token(yytext, TYPE);}
 "number" {return parse_dynamic_token(yytext, TYPE);}

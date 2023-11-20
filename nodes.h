@@ -56,6 +56,7 @@ class Node {
 public:
     variant<int, string>  value; // Value can be None (you can use a sentinel value to represent None)
     std::vector<unique_ptr<Node>> children;
+    bool isReturnNode;
 
     virtual variant<int, string> evaluate(SymbolTable& symbolTable);
 };
@@ -69,6 +70,13 @@ private:
 public:
     static void create(const string& name, SymbolType type, Node* nodePtr);
     static FunctionValue get(const string& name);
+};
+
+// Node for the return of a function
+class Result : public Node {
+public:
+    Result(variant<int, string> value, vector<unique_ptr<Node>> children);
+    variant<int, string> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a function declaration

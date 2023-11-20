@@ -82,12 +82,13 @@ extern int yydebug;
     ACTION = 283,                  /* ACTION  */
     L_BRACKET = 284,               /* L_BRACKET  */
     R_BRACKET = 285,               /* R_BRACKET  */
-    IDENTIFIER = 286,              /* IDENTIFIER  */
-    NUMBER = 287,                  /* NUMBER  */
-    STRING = 288,                  /* STRING  */
-    POSITION = 289,                /* POSITION  */
-    DOWN = 290,                    /* DOWN  */
-    TYPE = 291                     /* TYPE  */
+    RESULT = 286,                  /* RESULT  */
+    IDENTIFIER = 287,              /* IDENTIFIER  */
+    NUMBER = 288,                  /* NUMBER  */
+    STRING = 289,                  /* STRING  */
+    POSITION = 290,                /* POSITION  */
+    DOWN = 291,                    /* DOWN  */
+    TYPE = 292                     /* TYPE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -96,13 +97,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 154 "parser.y"
+#line 161 "parser.y"
 
     string *stringValue;
     int number;
     Node *nodePtr;
 
-#line 106 "parser.tab.h"
+#line 107 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

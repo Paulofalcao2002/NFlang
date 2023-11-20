@@ -110,9 +110,20 @@ FunctionValue FunctionTable::get(const string& name) {
 
 unordered_map<string, FunctionValue> FunctionTable::table;
 
+Result::Result(variant<int, string> value, vector<unique_ptr<Node>> children) {
+    this->value = value;
+    this->children = move(children);
+    this->isReturnNode = true;
+}
+
+variant<int, string> Result::evaluate(SymbolTable& symbolTable) {
+    return children[0]->evaluate(symbolTable); 
+}
+
 FunctionDeclaration::FunctionDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> FunctionDeclaration::evaluate(SymbolTable& symbolTable) {
@@ -136,6 +147,7 @@ variant<int, string> FunctionDeclaration::evaluate(SymbolTable& symbolTable) {
 FunctionCall::FunctionCall(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> FunctionCall::evaluate(SymbolTable& symbolTable) {
@@ -172,22 +184,30 @@ variant<int, string> FunctionCall::evaluate(SymbolTable& symbolTable) {
         i++;
     }
 
-    functionDeclarationNode->children[i + 1]->evaluate(*functionSymbolTable);
+    variant<int, string> result = functionDeclarationNode->children[i + 1]->evaluate(*functionSymbolTable);
 
-    // TODO: Return
+    // TODO: Return type checking
 
-    return 0; 
+    return result; 
 }
 
 Block::Block(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
+    // If this block has already been executed, resets the isReturnNode atribute
+    this->isReturnNode = false;
+
     // Evaluate each of the childs
     for (const auto& child : children) {
-        child->evaluate(symbolTable);
+        variant<int, string> result = child->evaluate(symbolTable);
+        if (child->isReturnNode) {
+            this->isReturnNode = true;
+            return result;
+        }
     }
 
     return 0; 
@@ -196,9 +216,13 @@ variant<int, string> Block::evaluate(SymbolTable& symbolTable) {
 Drive::Drive(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Drive::evaluate(SymbolTable& symbolTable) {
+    // If this block has already been executed, resets the isReturnNode atribute
+    this->isReturnNode = false;
+
     // Evaluates the variable declaration and assignment
     children[0]->evaluate(symbolTable);
 
@@ -225,9 +249,16 @@ variant<int, string> Drive::evaluate(SymbolTable& symbolTable) {
         throw invalid_argument("Semantic: drive loop value must be a number");
     }
 
+    variant<int, string> result = 0;
+
     while (get<int>(driveVar) <= get<int>(limitValue)) {
         // Evaluates loop block
-        children[2]->evaluate(symbolTable);
+        result = children[2]->evaluate(symbolTable);
+
+        if (children[2]->isReturnNode) {
+            this->isReturnNode = true; 
+            return result;
+        }
 
         // Increments loops variable
         symbolTable.set(get<string>(identifier), get<int>(driveVar) + 1);
@@ -241,15 +272,19 @@ variant<int, string> Drive::evaluate(SymbolTable& symbolTable) {
         }
     }
 
-    return 0; 
+    return result; 
 }
 
 PlayUntil::PlayUntil(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> PlayUntil::evaluate(SymbolTable& symbolTable) {
+    // If this block has already been executed, resets the isReturnNode atribute
+    this->isReturnNode = false;
+
     // Evaluate condition
     variant<int, string> condition = children[0]->evaluate(symbolTable);
     
@@ -257,10 +292,17 @@ variant<int, string> PlayUntil::evaluate(SymbolTable& symbolTable) {
         throw invalid_argument("Semantic: playuntil condition must be a boolean");
     }
 
+    variant<int, string> result = 0;
+
     // While stop condition isn't met
     while (!get<int>(condition)) {
         // Execute block
-        children[1]->evaluate(symbolTable);
+        result = children[1]->evaluate(symbolTable);
+
+        if (children[1]->isReturnNode) {
+            this->isReturnNode = true;
+            return result;
+        }
 
         // Reevaluate condition
         condition = children[0]->evaluate(symbolTable);
@@ -270,15 +312,19 @@ variant<int, string> PlayUntil::evaluate(SymbolTable& symbolTable) {
         }
     }
 
-    return 0; 
+    return result; 
 }
 
 WhenConditional::WhenConditional(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> WhenConditional::evaluate(SymbolTable& symbolTable) {
+    // If this block has already been executed, resets the isReturnNode atribute
+    this->isReturnNode = false;
+
     // Evaluate condition
     variant<int, string> condition = children[0]->evaluate(symbolTable);
 
@@ -286,20 +332,36 @@ variant<int, string> WhenConditional::evaluate(SymbolTable& symbolTable) {
         throw invalid_argument("Semantic: when condition must be a boolean");
     }
 
+    // Variable to store the result of the conditional block
+    variant<int, string> result = 0;
+
     // if condition execute if block, else is executed when condition isn´t met and 
     // else block exists
     if (get<int>(condition)) {
-        children[1]->evaluate(symbolTable);
+        result = children[1]->evaluate(symbolTable);
+
+        // If the conditional block is a return block, 
+        // then the when block becomes a return block as well
+        if (children[1]->isReturnNode) {
+            this->isReturnNode = true;
+        }
     } else if (children.size() > 2) {
-        children[2]->evaluate(symbolTable);
+        result = children[2]->evaluate(symbolTable);
+
+        // If the conditional block is a return block, 
+        // then the otherwise block becomes a return block as well
+        if (children[2]->isReturnNode) {
+            this->isReturnNode = true;
+        }
     }
 
-    return 0; 
+    return result; 
 }
 
 VarDeclaration::VarDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> VarDeclaration::evaluate(SymbolTable& symbolTable) {
@@ -326,6 +388,7 @@ variant<int, string> VarDeclaration::evaluate(SymbolTable& symbolTable) {
 Assignment::Assignment(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Assignment::evaluate(SymbolTable& symbolTable) {
@@ -346,6 +409,7 @@ variant<int, string> Assignment::evaluate(SymbolTable& symbolTable) {
 Call::Call(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Call::evaluate(SymbolTable& symbolTable) {
@@ -365,6 +429,7 @@ variant<int, string> Call::evaluate(SymbolTable& symbolTable) {
 BinOp::BinOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> BinOp::evaluate(SymbolTable& symbolTable) {
@@ -487,6 +552,7 @@ variant<int, string> BinOp::evaluate(SymbolTable& symbolTable) {
 UnOp::UnOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> UnOp::evaluate(SymbolTable& symbolTable) {
@@ -537,6 +603,7 @@ variant<int, string> UnOp::evaluate(SymbolTable& symbolTable) {
 Signal::Signal(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Signal::evaluate(SymbolTable& symbolTable) {
@@ -552,6 +619,7 @@ variant<int, string> Signal::evaluate(SymbolTable& symbolTable) {
 Number::Number(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Number::evaluate(SymbolTable& symbolTable) {
@@ -562,6 +630,7 @@ variant<int, string> Number::evaluate(SymbolTable& symbolTable) {
 String::String(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> String::evaluate(SymbolTable& symbolTable) {
@@ -572,6 +641,7 @@ variant<int, string> String::evaluate(SymbolTable& symbolTable) {
 Identifier::Identifier(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> Identifier::evaluate(SymbolTable& symbolTable) {
@@ -586,6 +656,7 @@ variant<int, string> Identifier::evaluate(SymbolTable& symbolTable) {
 NoOp::NoOp(variant<int, string> value, vector<unique_ptr<Node>> children) {
     this->value = value;
     this->children = move(children);
+    this->isReturnNode = false;
 }
 
 variant<int, string> NoOp::evaluate(SymbolTable& symbolTable) {
