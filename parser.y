@@ -22,6 +22,10 @@ Node* makeSignal() {
     return new Signal(0, vector<unique_ptr<Node>>());
 }
 
+Node* makeDown(string *str) {
+    return new Down(*str, vector<unique_ptr<Node>>());
+}
+
 Node* makeString(string *str) {
     return new String(*str, vector<unique_ptr<Node>>());
 }
@@ -283,7 +287,7 @@ factor: NUMBER { $$= makeNumber($1); }
     | NOT factor { $$ = makeUnOp((int) UnOperation::NOT, $2);  }
     | IDENTIFIER { $$ = makeIdentifier($1); }
     | STRING { $$ = makeString($1); }
-    | DOWN { $$ = makeString($1); }
+    | DOWN { $$ = makeDown($1); }
     | SIGNAL L_PARENTHESIS R_PARENTHESIS { $$ = makeSignal(); }
     | IDENTIFIER L_PARENTHESIS R_PARENTHESIS { $$ = makeFunctionCallWithoutArgs($1); }
     | IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS { $$ = makeFunctionCallWithArgs($1, $3); }

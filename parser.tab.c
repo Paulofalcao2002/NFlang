@@ -92,6 +92,10 @@ Node* makeSignal() {
     return new Signal(0, vector<unique_ptr<Node>>());
 }
 
+Node* makeDown(string *str) {
+    return new Down(*str, vector<unique_ptr<Node>>());
+}
+
 Node* makeString(string *str) {
     return new String(*str, vector<unique_ptr<Node>>());
 }
@@ -227,7 +231,7 @@ Node* makeBlock() {
 }
 
 
-#line 231 "parser.tab.c"
+#line 235 "parser.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -703,12 +707,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   191,   191,   196,   197,   200,   201,   202,   203,   204,
-     205,   206,   207,   208,   211,   212,   215,   217,   219,   223,
-     225,   229,   233,   235,   236,   239,   240,   243,   244,   245,
-     248,   249,   252,   254,   255,   258,   259,   262,   263,   264,
-     265,   268,   269,   270,   273,   274,   275,   278,   279,   280,
-     281,   282,   283,   284,   285,   286,   287,   288,   289
+       0,   195,   195,   200,   201,   204,   205,   206,   207,   208,
+     209,   210,   211,   212,   215,   216,   219,   221,   223,   227,
+     229,   233,   237,   239,   240,   243,   244,   247,   248,   249,
+     252,   253,   256,   258,   259,   262,   263,   266,   267,   268,
+     269,   272,   273,   274,   277,   278,   279,   282,   283,   284,
+     285,   286,   287,   288,   289,   290,   291,   292,   293
 };
 #endif
 
@@ -1360,304 +1364,304 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* program: statements  */
-#line 191 "parser.y"
+#line 195 "parser.y"
                     { 
     SymbolTable* symbolTable = new SymbolTable();
     (yyvsp[0].nodePtr)->evaluate(*symbolTable); 
 }
-#line 1369 "parser.tab.c"
+#line 1373 "parser.tab.c"
     break;
 
   case 3: /* statements: statement  */
-#line 196 "parser.y"
+#line 200 "parser.y"
                       { (yyval.nodePtr) = makeBlock(); (yyval.nodePtr)->children.emplace_back(unique_ptr<Node>((yyvsp[0].nodePtr))); }
-#line 1375 "parser.tab.c"
+#line 1379 "parser.tab.c"
     break;
 
   case 4: /* statements: statements statement  */
-#line 197 "parser.y"
+#line 201 "parser.y"
                             { (yyvsp[-1].nodePtr)->children.emplace_back(unique_ptr<Node>((yyvsp[0].nodePtr))); }
-#line 1381 "parser.tab.c"
+#line 1385 "parser.tab.c"
     break;
 
   case 5: /* statement: BREAK_LINE  */
-#line 200 "parser.y"
+#line 204 "parser.y"
                       { (yyval.nodePtr) = makeNoOp(); }
-#line 1387 "parser.tab.c"
+#line 1391 "parser.tab.c"
     break;
 
   case 14: /* block: L_BRACKET R_BRACKET  */
-#line 211 "parser.y"
+#line 215 "parser.y"
                            { (yyval.nodePtr) = makeNoOp(); }
-#line 1393 "parser.tab.c"
+#line 1397 "parser.tab.c"
     break;
 
   case 15: /* block: L_BRACKET statements R_BRACKET  */
-#line 212 "parser.y"
+#line 216 "parser.y"
                                      { (yyval.nodePtr) = (yyvsp[-1].nodePtr); }
-#line 1399 "parser.tab.c"
+#line 1403 "parser.tab.c"
     break;
 
   case 16: /* result: RESULT boolean_expression  */
-#line 215 "parser.y"
+#line 219 "parser.y"
                                   { (yyval.nodePtr) = makeResult((yyvsp[0].nodePtr)); }
-#line 1405 "parser.tab.c"
+#line 1409 "parser.tab.c"
     break;
 
   case 17: /* func_declaration: ACTION TYPE IDENTIFIER L_PARENTHESIS R_PARENTHESIS block  */
-#line 218 "parser.y"
+#line 222 "parser.y"
     { (yyval.nodePtr) = makeFunctionDeclarationWithoutArgs((yyvsp[-4].stringValue), (yyvsp[-3].stringValue), (yyvsp[0].nodePtr)); }
-#line 1411 "parser.tab.c"
+#line 1415 "parser.tab.c"
     break;
 
   case 18: /* func_declaration: ACTION TYPE IDENTIFIER L_PARENTHESIS declaration_arguments R_PARENTHESIS block  */
-#line 220 "parser.y"
+#line 224 "parser.y"
     { (yyval.nodePtr) = makeFunctionDeclarationWithArgs((yyvsp[-5].stringValue), (yyvsp[-4].stringValue), (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1417 "parser.tab.c"
+#line 1421 "parser.tab.c"
     break;
 
   case 19: /* declaration_arguments: TYPE IDENTIFIER  */
-#line 224 "parser.y"
+#line 228 "parser.y"
     { (yyval.nodePtr) = makeBlock(); (yyval.nodePtr)->children.emplace_back(unique_ptr<Node>(makePureVarDeclaration((yyvsp[-1].stringValue), (yyvsp[0].stringValue)))); }
-#line 1423 "parser.tab.c"
+#line 1427 "parser.tab.c"
     break;
 
   case 20: /* declaration_arguments: declaration_arguments COMMA TYPE IDENTIFIER  */
-#line 226 "parser.y"
+#line 230 "parser.y"
     { (yyvsp[-3].nodePtr)->children.emplace_back(makePureVarDeclaration((yyvsp[-1].stringValue), (yyvsp[0].stringValue))); }
-#line 1429 "parser.tab.c"
+#line 1433 "parser.tab.c"
     break;
 
   case 21: /* drive_loop: DRIVE TYPE IDENTIFIER ON L_PARENTHESIS boolean_expression COMMA boolean_expression R_PARENTHESIS block  */
-#line 230 "parser.y"
+#line 234 "parser.y"
     { (yyval.nodePtr) =  makeDrive((yyvsp[-8].stringValue), (yyvsp[-7].stringValue), (yyvsp[-4].nodePtr), (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1435 "parser.tab.c"
+#line 1439 "parser.tab.c"
     break;
 
   case 22: /* play_until: PLAY_UNTIL boolean_expression block  */
-#line 233 "parser.y"
+#line 237 "parser.y"
                                                 { (yyval.nodePtr) = makePlayUntil((yyvsp[-1].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1441 "parser.tab.c"
+#line 1445 "parser.tab.c"
     break;
 
   case 23: /* when_conditional: WHEN boolean_expression THEN block  */
-#line 235 "parser.y"
+#line 239 "parser.y"
                                                      { (yyval.nodePtr) = makeWhenConditionalWithOneBlock((yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1447 "parser.tab.c"
+#line 1451 "parser.tab.c"
     break;
 
   case 24: /* when_conditional: WHEN boolean_expression THEN block OTHERWISE block  */
-#line 236 "parser.y"
+#line 240 "parser.y"
                                                          { (yyval.nodePtr) = makeWhenConditionalWithTwoBlocks((yyvsp[-4].nodePtr), (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1453 "parser.tab.c"
+#line 1457 "parser.tab.c"
     break;
 
   case 25: /* variable_declaration: TYPE IDENTIFIER  */
-#line 239 "parser.y"
+#line 243 "parser.y"
                                       { (yyval.nodePtr) = makePureVarDeclaration((yyvsp[-1].stringValue), (yyvsp[0].stringValue)); }
-#line 1459 "parser.tab.c"
+#line 1463 "parser.tab.c"
     break;
 
   case 26: /* variable_declaration: TYPE IDENTIFIER IS boolean_expression  */
-#line 240 "parser.y"
+#line 244 "parser.y"
                                             { (yyval.nodePtr) = makeVarDeclarationWithAssignment((yyvsp[-3].stringValue), (yyvsp[-2].stringValue), (yyvsp[0].nodePtr)); }
-#line 1465 "parser.tab.c"
+#line 1469 "parser.tab.c"
     break;
 
   case 27: /* assignment: IDENTIFIER IS boolean_expression  */
-#line 243 "parser.y"
+#line 247 "parser.y"
                                              { (yyval.nodePtr) = makeAssignment((yyvsp[-2].stringValue), (yyvsp[0].nodePtr)); }
-#line 1471 "parser.tab.c"
+#line 1475 "parser.tab.c"
     break;
 
   case 28: /* assignment: IDENTIFIER L_PARENTHESIS R_PARENTHESIS  */
-#line 244 "parser.y"
+#line 248 "parser.y"
                                              { (yyval.nodePtr) = makeFunctionCallWithoutArgs((yyvsp[-2].stringValue)); }
-#line 1477 "parser.tab.c"
+#line 1481 "parser.tab.c"
     break;
 
   case 29: /* assignment: IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS  */
-#line 245 "parser.y"
+#line 249 "parser.y"
                                                             { (yyval.nodePtr) = makeFunctionCallWithArgs((yyvsp[-3].stringValue), (yyvsp[-1].nodePtr)); }
-#line 1483 "parser.tab.c"
+#line 1487 "parser.tab.c"
     break;
 
   case 30: /* call_arguments: boolean_expression  */
-#line 248 "parser.y"
+#line 252 "parser.y"
                                    { (yyval.nodePtr) = makeBlock(); (yyval.nodePtr)->children.emplace_back(unique_ptr<Node>((yyvsp[0].nodePtr))); }
-#line 1489 "parser.tab.c"
+#line 1493 "parser.tab.c"
     break;
 
   case 31: /* call_arguments: call_arguments COMMA boolean_expression  */
-#line 249 "parser.y"
+#line 253 "parser.y"
                                               { (yyvsp[-2].nodePtr)->children.emplace_back((yyvsp[0].nodePtr)); }
-#line 1495 "parser.tab.c"
+#line 1499 "parser.tab.c"
     break;
 
   case 32: /* call: CALL L_PARENTHESIS boolean_expression R_PARENTHESIS  */
-#line 252 "parser.y"
+#line 256 "parser.y"
                                                           { (yyval.nodePtr) = makeCall((yyvsp[-1].nodePtr)); }
-#line 1501 "parser.tab.c"
+#line 1505 "parser.tab.c"
     break;
 
   case 33: /* boolean_expression: boolean_expression OR boolean_term  */
-#line 254 "parser.y"
+#line 258 "parser.y"
                                                        { (yyval.nodePtr)= makeBinOp((int) BinOperation::OR, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1507 "parser.tab.c"
+#line 1511 "parser.tab.c"
     break;
 
   case 34: /* boolean_expression: boolean_term  */
-#line 255 "parser.y"
+#line 259 "parser.y"
                    { (yyval.nodePtr)= (yyvsp[0].nodePtr); }
-#line 1513 "parser.tab.c"
+#line 1517 "parser.tab.c"
     break;
 
   case 35: /* boolean_term: boolean_term AND relative_expression  */
-#line 258 "parser.y"
+#line 262 "parser.y"
                                                    { (yyval.nodePtr)= makeBinOp((int) BinOperation::AND, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1519 "parser.tab.c"
+#line 1523 "parser.tab.c"
     break;
 
   case 36: /* boolean_term: relative_expression  */
-#line 259 "parser.y"
+#line 263 "parser.y"
                           { (yyval.nodePtr)= (yyvsp[0].nodePtr); }
-#line 1525 "parser.tab.c"
+#line 1529 "parser.tab.c"
     break;
 
   case 37: /* relative_expression: relative_expression EQUALS expression  */
-#line 262 "parser.y"
+#line 266 "parser.y"
                                                            { (yyval.nodePtr) = makeBinOp((int) BinOperation::EQUALS, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1531 "parser.tab.c"
+#line 1535 "parser.tab.c"
     break;
 
   case 38: /* relative_expression: relative_expression GREATER_THAN expression  */
-#line 263 "parser.y"
+#line 267 "parser.y"
                                                   { (yyval.nodePtr) = makeBinOp((int) BinOperation::GREATER_THAN, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1537 "parser.tab.c"
+#line 1541 "parser.tab.c"
     break;
 
   case 39: /* relative_expression: relative_expression LESSER_THAN expression  */
-#line 264 "parser.y"
+#line 268 "parser.y"
                                                  { (yyval.nodePtr) = makeBinOp((int) BinOperation::LESSER_THAN, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr));}
-#line 1543 "parser.tab.c"
+#line 1547 "parser.tab.c"
     break;
 
   case 40: /* relative_expression: expression  */
-#line 265 "parser.y"
+#line 269 "parser.y"
                  { (yyval.nodePtr)= (yyvsp[0].nodePtr); }
-#line 1549 "parser.tab.c"
+#line 1553 "parser.tab.c"
     break;
 
   case 41: /* expression: expression PLUS term  */
-#line 268 "parser.y"
+#line 272 "parser.y"
                                  { (yyval.nodePtr) = makeBinOp((int) BinOperation::PLUS, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1555 "parser.tab.c"
+#line 1559 "parser.tab.c"
     break;
 
   case 42: /* expression: expression MINUS term  */
-#line 269 "parser.y"
+#line 273 "parser.y"
                                   { (yyval.nodePtr) = makeBinOp((int) BinOperation::MINUS, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1561 "parser.tab.c"
+#line 1565 "parser.tab.c"
     break;
 
   case 43: /* expression: term  */
-#line 270 "parser.y"
+#line 274 "parser.y"
                  { (yyval.nodePtr) = (yyvsp[0].nodePtr); }
-#line 1567 "parser.tab.c"
+#line 1571 "parser.tab.c"
     break;
 
   case 44: /* term: term TIMES factor  */
-#line 273 "parser.y"
+#line 277 "parser.y"
                         { (yyval.nodePtr) = makeBinOp((int) BinOperation::TIMES, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1573 "parser.tab.c"
+#line 1577 "parser.tab.c"
     break;
 
   case 45: /* term: term DIVIDE factor  */
-#line 274 "parser.y"
+#line 278 "parser.y"
                          { (yyval.nodePtr) = makeBinOp((int) BinOperation::DIVIDE, (yyvsp[-2].nodePtr), (yyvsp[0].nodePtr)); }
-#line 1579 "parser.tab.c"
+#line 1583 "parser.tab.c"
     break;
 
   case 46: /* term: factor  */
-#line 275 "parser.y"
+#line 279 "parser.y"
              { (yyval.nodePtr) = (yyvsp[0].nodePtr); }
-#line 1585 "parser.tab.c"
+#line 1589 "parser.tab.c"
     break;
 
   case 47: /* factor: NUMBER  */
-#line 278 "parser.y"
+#line 282 "parser.y"
                { (yyval.nodePtr)= makeNumber((yyvsp[0].number)); }
-#line 1591 "parser.tab.c"
+#line 1595 "parser.tab.c"
     break;
 
   case 48: /* factor: L_PARENTHESIS boolean_expression R_PARENTHESIS  */
-#line 279 "parser.y"
+#line 283 "parser.y"
                                                      {(yyval.nodePtr) = (yyvsp[-1].nodePtr); }
-#line 1597 "parser.tab.c"
+#line 1601 "parser.tab.c"
     break;
 
   case 49: /* factor: PLUS factor  */
-#line 280 "parser.y"
+#line 284 "parser.y"
                   { (yyval.nodePtr) = makeUnOp((int) UnOperation::PLUS, (yyvsp[0].nodePtr)); }
-#line 1603 "parser.tab.c"
+#line 1607 "parser.tab.c"
     break;
 
   case 50: /* factor: MINUS factor  */
-#line 281 "parser.y"
+#line 285 "parser.y"
                    { (yyval.nodePtr) = makeUnOp((int) UnOperation::MINUS, (yyvsp[0].nodePtr));  }
-#line 1609 "parser.tab.c"
+#line 1613 "parser.tab.c"
     break;
 
   case 51: /* factor: INCREMENT factor  */
-#line 282 "parser.y"
+#line 286 "parser.y"
                        {(yyval.nodePtr) = makeUnOp((int) UnOperation::INCREMENT, (yyvsp[0].nodePtr)); }
-#line 1615 "parser.tab.c"
+#line 1619 "parser.tab.c"
     break;
 
   case 52: /* factor: NOT factor  */
-#line 283 "parser.y"
+#line 287 "parser.y"
                  { (yyval.nodePtr) = makeUnOp((int) UnOperation::NOT, (yyvsp[0].nodePtr));  }
-#line 1621 "parser.tab.c"
+#line 1625 "parser.tab.c"
     break;
 
   case 53: /* factor: IDENTIFIER  */
-#line 284 "parser.y"
+#line 288 "parser.y"
                  { (yyval.nodePtr) = makeIdentifier((yyvsp[0].stringValue)); }
-#line 1627 "parser.tab.c"
+#line 1631 "parser.tab.c"
     break;
 
   case 54: /* factor: STRING  */
-#line 285 "parser.y"
+#line 289 "parser.y"
              { (yyval.nodePtr) = makeString((yyvsp[0].stringValue)); }
-#line 1633 "parser.tab.c"
+#line 1637 "parser.tab.c"
     break;
 
   case 55: /* factor: DOWN  */
-#line 286 "parser.y"
-           { (yyval.nodePtr) = makeString((yyvsp[0].stringValue)); }
-#line 1639 "parser.tab.c"
+#line 290 "parser.y"
+           { (yyval.nodePtr) = makeDown((yyvsp[0].stringValue)); }
+#line 1643 "parser.tab.c"
     break;
 
   case 56: /* factor: SIGNAL L_PARENTHESIS R_PARENTHESIS  */
-#line 287 "parser.y"
+#line 291 "parser.y"
                                          { (yyval.nodePtr) = makeSignal(); }
-#line 1645 "parser.tab.c"
+#line 1649 "parser.tab.c"
     break;
 
   case 57: /* factor: IDENTIFIER L_PARENTHESIS R_PARENTHESIS  */
-#line 288 "parser.y"
+#line 292 "parser.y"
                                              { (yyval.nodePtr) = makeFunctionCallWithoutArgs((yyvsp[-2].stringValue)); }
-#line 1651 "parser.tab.c"
+#line 1655 "parser.tab.c"
     break;
 
   case 58: /* factor: IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS  */
-#line 289 "parser.y"
+#line 293 "parser.y"
                                                             { (yyval.nodePtr) = makeFunctionCallWithArgs((yyvsp[-3].stringValue), (yyvsp[-1].nodePtr)); }
-#line 1657 "parser.tab.c"
+#line 1661 "parser.tab.c"
     break;
 
 
-#line 1661 "parser.tab.c"
+#line 1665 "parser.tab.c"
 
       default: break;
     }
@@ -1850,5 +1854,5 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 292 "parser.y"
+#line 296 "parser.y"
 

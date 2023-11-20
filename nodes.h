@@ -36,6 +36,9 @@ enum class SymbolType {
 };
 
 SymbolType getSymbolTypeFromString(const string& type);
+string getSymbolTypeName(SymbolType symbolType);
+string incrementDown(const string& down);
+int getDownOrder(const string& down);
 
 using SymbolTableType = unordered_map<string, pair<SymbolType, variant<int, string>>>;
 
@@ -44,7 +47,7 @@ public:
     SymbolTable();
 
     void create(const string& symbol, SymbolType type);
-    variant<int, string> get(const string& symbol);
+    pair<SymbolType, variant<int, string>> get(const string& symbol);
     void set(const string& symbol, const variant<int, string> value);
 
 private:
@@ -55,10 +58,10 @@ private:
 class Node {
 public:
     variant<int, string>  value; // Value can be None (you can use a sentinel value to represent None)
-    std::vector<unique_ptr<Node>> children;
+    vector<unique_ptr<Node>> children;
     bool isReturnNode;
 
-    virtual variant<int, string> evaluate(SymbolTable& symbolTable);
+    virtual pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable);
 };
 
 using FunctionValue = tuple<SymbolType, Node*>;
@@ -76,56 +79,56 @@ public:
 class Result : public Node {
 public:
     Result(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a function declaration
 class FunctionDeclaration : public Node {
 public:
     FunctionDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a function call
 class FunctionCall : public Node {
 public:
     FunctionCall(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a block of statements
 class Block : public Node {
 public:
     Block(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for drive loop
 class Drive : public Node {
 public:
     Drive(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for playuntil loop
 class PlayUntil : public Node {
 public:
     PlayUntil(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for when conditional operation
 class WhenConditional : public Node {
 public:
     WhenConditional(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a variable declaration operation
 class VarDeclaration : public Node {
 public:
     VarDeclaration(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 
@@ -133,21 +136,21 @@ public:
 class Assignment : public Node {
 public:
     Assignment(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a call (print) operation
 class Call : public Node {
 public:
     Call(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for binary operations (e.g., +, -, *, /, logical AND, logical OR, etc.)
 class BinOp : public Node {
 public:
     BinOp(variant<int, string> value, vector<unique_ptr<Node>> children);
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for unary operations (e.g., unary minus, logical NOT, etc.)
@@ -155,7 +158,7 @@ class UnOp : public Node {
 public:
     UnOp(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a numeric value
@@ -163,7 +166,7 @@ class Signal : public Node {
 public:
     Signal(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a numeric value
@@ -171,23 +174,32 @@ class Number : public Node {
 public:
     Number(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
-// Node for a numeric value
+// Node for a string value
 class String : public Node {
 public:
     String(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
+
+// Node for a down value
+class Down : public Node {
+public:
+    Down(variant<int, string> value, vector<unique_ptr<Node>> children);
+
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
+};
+
 
 // Node for a identifier
 class Identifier : public Node {
 public:
     Identifier(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>>evaluate(SymbolTable& symbolTable) override;
 };
 
 // Node for a empty line
@@ -195,7 +207,7 @@ class NoOp : public Node {
 public:
     NoOp(variant<int, string> value, vector<unique_ptr<Node>> children);
 
-    variant<int, string> evaluate(SymbolTable& symbolTable) override;
+    pair<SymbolType, variant<int, string>> evaluate(SymbolTable& symbolTable) override;
 };
 
 #endif // NODES_H

@@ -68,6 +68,7 @@ int parse_dynamic_token(char *token_str, int token_type) {
 "seconddown" {return parse_dynamic_token(yytext, DOWN);}
 "thirddown" {return parse_dynamic_token(yytext, DOWN);}
 "fourthdown" {return parse_dynamic_token(yytext, DOWN);}
+"toondowns" {return parse_dynamic_token(yytext, DOWN);}
 "QB" {return parse_dynamic_token(yytext, POSITION);}
 "WR" {return parse_dynamic_token(yytext, POSITION);}
 "TE" {return parse_dynamic_token(yytext, POSITION);}
