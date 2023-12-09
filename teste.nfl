@@ -1,3 +1,13 @@
-drive down d on (firstdown, fourthdown) {
-    call(d)
+
+action number fibo(number a) {
+    when a < 3 then {
+        result a
+    }
+
+    result fibo(a - 1) + fibo(a - 2)
 }
+
+drive number i on (1, 10) {
+    call(fibo(i))
+}
+
