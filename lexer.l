@@ -45,6 +45,7 @@ int parse_dynamic_token(char *token_str, int token_type) {
 "or" {return OR;}
 "," {return COMMA;}
 ":" {return COLON;}
+"." {return DOT;}
 "{" {return L_BRACKET;}
 "}" {return R_BRACKET;}
 "is" {return IS;}

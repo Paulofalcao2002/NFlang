@@ -70,25 +70,26 @@ extern int yydebug;
     IS = 271,                      /* IS  */
     COMMA = 272,                   /* COMMA  */
     COLON = 273,                   /* COLON  */
-    SIGNAL = 274,                  /* SIGNAL  */
-    CALL = 275,                    /* CALL  */
-    WHEN = 276,                    /* WHEN  */
-    THEN = 277,                    /* THEN  */
-    OTHERWISE = 278,               /* OTHERWISE  */
-    DRIVE = 279,                   /* DRIVE  */
-    ON = 280,                      /* ON  */
-    PLAY_UNTIL = 281,              /* PLAY_UNTIL  */
-    BREAK_LINE = 282,              /* BREAK_LINE  */
-    ACTION = 283,                  /* ACTION  */
-    L_BRACKET = 284,               /* L_BRACKET  */
-    R_BRACKET = 285,               /* R_BRACKET  */
-    RESULT = 286,                  /* RESULT  */
-    IDENTIFIER = 287,              /* IDENTIFIER  */
-    NUMBER = 288,                  /* NUMBER  */
-    STRING = 289,                  /* STRING  */
-    POSITION = 290,                /* POSITION  */
-    DOWN = 291,                    /* DOWN  */
-    TYPE = 292                     /* TYPE  */
+    DOT = 274,                     /* DOT  */
+    SIGNAL = 275,                  /* SIGNAL  */
+    CALL = 276,                    /* CALL  */
+    WHEN = 277,                    /* WHEN  */
+    THEN = 278,                    /* THEN  */
+    OTHERWISE = 279,               /* OTHERWISE  */
+    DRIVE = 280,                   /* DRIVE  */
+    ON = 281,                      /* ON  */
+    PLAY_UNTIL = 282,              /* PLAY_UNTIL  */
+    BREAK_LINE = 283,              /* BREAK_LINE  */
+    ACTION = 284,                  /* ACTION  */
+    L_BRACKET = 285,               /* L_BRACKET  */
+    R_BRACKET = 286,               /* R_BRACKET  */
+    RESULT = 287,                  /* RESULT  */
+    IDENTIFIER = 288,              /* IDENTIFIER  */
+    NUMBER = 289,                  /* NUMBER  */
+    STRING = 290,                  /* STRING  */
+    POSITION = 291,                /* POSITION  */
+    DOWN = 292,                    /* DOWN  */
+    TYPE = 293                     /* TYPE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -97,13 +98,13 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 165 "parser.y"
+#line 196 "parser.y"
 
     string *stringValue;
     int number;
     Node *nodePtr;
 
-#line 107 "parser.tab.h"
+#line 108 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -38,6 +38,13 @@ Node* makeIdentifier(string *identifier) {
     return new Identifier(*identifier, vector<unique_ptr<Node>>());
 }
 
+Node* makePlayValueIdentifier(string *identifier, string *position) {
+    vector<unique_ptr<Node>> children;
+    children.emplace_back(makeIdentifier(position));
+    return new Identifier(*identifier, move(children));
+}
+
+
 Node* makeUnOp(int operation, Node *child) {
     vector<unique_ptr<Node>> children;
     children.emplace_back(unique_ptr<Node>(child));
@@ -49,6 +56,20 @@ Node* makeBinOp(int operation, Node *left, Node *right) {
     children.emplace_back(unique_ptr<Node>(left));
     children.emplace_back(unique_ptr<Node>(right));
     return new BinOp(operation, move(children));
+}
+
+Node* makeEmptyPlay() {
+    return new Play(0, vector<unique_ptr<Node>>());
+}
+
+Node* makePlayWithArguments(Node *arguments) {
+    vector<unique_ptr<Node>> children;
+
+    for (auto& argument : arguments->children) {
+        children.emplace_back(std::move(argument));
+    }
+
+    return new Play(0, move(children));
 }
 
 Node* makePureVarDeclaration(string *type, string *identifier) {
@@ -70,6 +91,16 @@ Node* makeAssignment(string *identifier, Node *expression) {
     vector<unique_ptr<Node>> children;
     Node* identifierNode = makeIdentifier(identifier);
     children.emplace_back(unique_ptr<Node>(identifierNode));
+    children.emplace_back(unique_ptr<Node>(expression));
+    return new Assignment(0, move(children));
+}
+
+Node* makePlayPositionAssignment(string *identifier, string *position, Node *expression) {
+    vector<unique_ptr<Node>> children;
+    Node* identifierNode = makeIdentifier(identifier);
+    Node* positionNode = makeIdentifier(position);
+    children.emplace_back(unique_ptr<Node>(identifierNode));
+    children.emplace_back(unique_ptr<Node>(positionNode));
     children.emplace_back(unique_ptr<Node>(expression));
     return new Assignment(0, move(children));
 }
@@ -175,7 +206,7 @@ Node* makeBlock() {
 %token NOT EQUALS GREATER_THAN LESSER_THAN AND OR
 
 // Variable definition tokens
-%token IS COMMA COLON  
+%token IS COMMA COLON DOT
 
 // IO tokens
 %token SIGNAL CALL
@@ -193,11 +224,11 @@ Node* makeBlock() {
 %type <nodePtr> func_block func_statements func_statement result func_drive_loop func_play_until func_when_conditional
 
 // Expressions
-%type <nodePtr> boolean_expression boolean_term relative_expression expression term factor
+%type <nodePtr> general_expression play_expression play_arguments boolean_expression boolean_term relative_expression expression term factor
 
 
 %type <number> NUMBER
-%type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL
+%type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL POSITION
 
 %%
 
@@ -260,22 +291,23 @@ when_conditional: WHEN boolean_expression THEN block { $$ = makeWhenConditionalW
 
 // Declaration of a variable statement
 variable_declaration: TYPE IDENTIFIER { $$ = makePureVarDeclaration($1, $2); }
-    | TYPE IDENTIFIER IS boolean_expression { $$ = makeVarDeclarationWithAssignment($1, $2, $4); }
+    | TYPE IDENTIFIER IS general_expression { $$ = makeVarDeclarationWithAssignment($1, $2, $4); }
     ;
 
 // Assignment of a variable value
-assignment: IDENTIFIER IS boolean_expression { $$ = makeAssignment($1, $3); }
+assignment: IDENTIFIER IS general_expression { $$ = makeAssignment($1, $3); }
     | IDENTIFIER L_PARENTHESIS R_PARENTHESIS { $$ = makeFunctionCallWithoutArgs($1); }
     | IDENTIFIER L_PARENTHESIS call_arguments R_PARENTHESIS { $$ = makeFunctionCallWithArgs($1, $3); }
+    | IDENTIFIER DOT POSITION IS boolean_expression { $$ = makePlayPositionAssignment($1, $3, $5); }
     ;
 
 // Arguments of a function call 
-call_arguments: boolean_expression { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<Node>($1)); }
-    | call_arguments COMMA boolean_expression { $1->children.emplace_back($3); }
+call_arguments: general_expression { $$ = makeBlock(); $$->children.emplace_back(unique_ptr<Node>($1)); }
+    | call_arguments COMMA general_expression { $1->children.emplace_back($3); }
     ;
 
 // Print into stdout
-call: CALL L_PARENTHESIS boolean_expression R_PARENTHESIS { $$ = makeCall($3); };
+call: CALL L_PARENTHESIS general_expression R_PARENTHESIS { $$ = makeCall($3); };
 
 
 // *********** FUNCTION LEVEL STATEMENTS **************
@@ -302,7 +334,7 @@ func_block: L_BRACKET R_BRACKET { $$ = makeNoOp(); }
     ;
 
 // Result statement is the return of a function
-result: RESULT boolean_expression { $$ = makeResult($2); };
+result: RESULT general_expression { $$ = makeResult($2); };
 
 // Drive loop, the equivalent of a for each loop. At function level it can have result statements
 func_drive_loop: DRIVE TYPE IDENTIFIER ON L_PARENTHESIS boolean_expression COMMA boolean_expression R_PARENTHESIS func_block
@@ -321,6 +353,21 @@ func_when_conditional: WHEN boolean_expression THEN func_block { $$ = makeWhenCo
 
 
 // ********** EXPRESSIONS ***********
+
+// A general expression is either a boolean expression (trivial values like numbers, strings)
+// or a play expression (dictionary like structure)
+general_expression: boolean_expression { $$ = $1; }
+    | play_expression { $$ = $1; }
+    ;
+
+// A play can either be an empty play, or a play with multiple positions
+play_expression: L_BRACKET R_BRACKET { $$ = makeEmptyPlay(); }
+    | L_BRACKET play_arguments R_BRACKET { $$ = makePlayWithArguments($2); }
+
+// The arguments of the play consists of a position and a value: (QB: "Deep-pass", WR: makeInTimeDecision(), ../)
+play_arguments: POSITION COLON boolean_expression { $$ = makeBlock(); $$->children.emplace_back(makeAssignment($1, $3)); }
+    | play_arguments COMMA POSITION COLON boolean_expression { $$->children.emplace_back(makeAssignment($3, $5)); }
+    ;
 
 // Boolean terms can be connected through or tokens
 boolean_expression: boolean_expression OR boolean_term { $$= makeBinOp((int) BinOperation::OR, $1, $3); }
@@ -360,6 +407,7 @@ factor: NUMBER { $$= makeNumber($1); }
     | INCREMENT factor {$$ = makeUnOp((int) UnOperation::INCREMENT, $2); }
     | NOT factor { $$ = makeUnOp((int) UnOperation::NOT, $2);  }
     | IDENTIFIER { $$ = makeIdentifier($1); }
+    | IDENTIFIER DOT POSITION { $$ = makePlayValueIdentifier($1, $3); }
     | STRING { $$ = makeString($1); }
     | DOWN { $$ = makeDown($1); }
     | SIGNAL L_PARENTHESIS R_PARENTHESIS { $$ = makeSignal(); }
