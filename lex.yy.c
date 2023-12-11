@@ -2164,7 +2164,4 @@ void yyfree (void * ptr )
 #line 104 "lexer.l"
 
 
-int main() {
-    yyparse();
-}
 

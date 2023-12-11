@@ -1,6 +1,6 @@
 
 action number fibo(number a) {
-    when a < 3 then {
+    when a < 3 then { # This is a comment
         result a
     }
 
@@ -46,4 +46,3 @@ call(qb1)
 qb1 is chooseQB(qb1)
 
 call(qb1)
-

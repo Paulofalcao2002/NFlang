@@ -103,6 +103,3 @@ int parse_dynamic_token(char *token_str, int token_type) {
 
 %%
 
-int main() {
-    yyparse();
-}

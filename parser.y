@@ -3,17 +3,19 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
-
 #include "nodes.h"
 using namespace std;
 
-int yylex(); 
+// Retrieve global pointer to astRoot (defined in main.cpp)
+extern Node* astRoot;
 
+// Define lexer functions
+int yylex(); 
 void yyerror(const char *s) {
-    // Define the yyerror function
     fprintf(stderr, "Error: %s\n", s);
 }
 
+// Helper functions designed to create AST nodes
 Node* makeNoOp() {
     return new Number(0, vector<unique_ptr<Node>>());
 }
@@ -43,7 +45,6 @@ Node* makePlayValueIdentifier(string *identifier, string *position) {
     children.emplace_back(makeIdentifier(position));
     return new Identifier(*identifier, move(children));
 }
-
 
 Node* makeUnOp(int operation, Node *child) {
     vector<unique_ptr<Node>> children;
@@ -226,7 +227,7 @@ Node* makeBlock() {
 // Expressions
 %type <nodePtr> general_expression play_expression play_arguments boolean_expression boolean_term relative_expression expression term factor
 
-
+// Values tokens
 %type <number> NUMBER
 %type <stringValue> IDENTIFIER STRING TYPE DOWN SIGNAL POSITION
 
@@ -234,8 +235,8 @@ Node* makeBlock() {
 
 // Program is composed of top level statements (no result statement)
 program: statements { 
-    SymbolTable* symbolTable = new SymbolTable();
-    $1->evaluate(*symbolTable); 
+    // Define de astRoot as the result of the program
+    astRoot = $1;
 };
 
 // *********** TOP LEVEL STATEMENTS **************
