@@ -1,29 +1,31 @@
 %option noyywrap
 %{
+// File responsible for the lexical analyses phase of the compiler
+// Returns tokens defined in the parser.y (syntax analyses phase)
+
 #include "nodes.h"
 #include "parser.tab.h"
 #include <string>
 
-#define MAX_STRING_LENGTH 100 // Define a maximum length for strings
+// Buffer to store string value
+#define MAX_STRING_LENGTH 100
+char stored_string[MAX_STRING_LENGTH]; 
 
-char stored_string[MAX_STRING_LENGTH]; // Buffer to store string value
-
+// Function to return dynamic values tokens (TYPE, DOWN, IDENTIFIER, STRING, NUMBER)
 int parse_dynamic_token(char *token_str, int token_type) {
     if (token_type == NUMBER) {
-        yylval.number = atoi(token_str); // Store number value
-        return NUMBER; // Return number token
+        yylval.number = atoi(token_str);
+        return NUMBER;
     } 
 
     if (token_type == STRING) {
-        strncpy(stored_string, token_str + 1, strlen(token_str) - 2); // Store the string value (excluding quotes)
-        stored_string[strlen(token_str) - 2] = '\0'; // Add null terminator
-        yylval.stringValue = new string(strdup(stored_string)); // Store the string value in yylval
-        return STRING; // Return string token
+        strncpy(stored_string, token_str + 1, strlen(token_str) - 2);
+        stored_string[strlen(token_str) - 2] = '\0';
+        yylval.stringValue = new string(strdup(stored_string));
+        return STRING;
     }
 
-    // Store the token string (for all the remaining tokens, no transformation is needed)
     yylval.stringValue = new string(token_str); 
-
     return token_type; 
 }
 %}

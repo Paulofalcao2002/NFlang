@@ -1,4 +1,9 @@
 %{
+// File responsible for the syntax analyses phase of the compiler
+// Builds the AST (Abstract Syntax Tree) that represents the NFLang program
+// Define astRoot as the root of the AST tree when the syntax analyses is done
+// Also define tokens used in the lexical analyses
+
 #include <stdio.h>    
 #include <stdlib.h>
 #include <iostream>

@@ -1,3 +1,6 @@
+// Implementation of the classes and functions defined in nodes.h. For more explanations of what each
+// class and function do consult nodes.h
+
 #include "nodes.h"
 #include <iostream>
 #include <limits> 
@@ -476,7 +479,6 @@ VarDeclaration::VarDeclaration(NodeValue value, vector<unique_ptr<Node>> childre
 }
 
 pair<SymbolType, NodeValue> VarDeclaration::evaluate(SymbolTable& symbolTable) {
-    // Variable declaration, defines the type of the variable and can assign a value
     NodeValue identifier = children[0]->value;
 
     if (!holds_alternative<string>(identifier)) {
@@ -503,7 +505,6 @@ Assignment::Assignment(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> Assignment::evaluate(SymbolTable& symbolTable) {
-    // Assign the value of the expression to a variable in the symbol table
     NodeValue identifier = children[0]->value;
 
     if (!holds_alternative<string>(identifier)) {
@@ -576,7 +577,6 @@ pair<SymbolType, NodeValue> Call::evaluate(SymbolTable& symbolTable) {
         cout << "}" << endl;
     };
 
-    // Prints in the std out the value of the expression
     pair<SymbolType, NodeValue> child = children[0]->evaluate(symbolTable);
 
     if (holds_alternative<unordered_map<string, variant<int, string>>>(child.second)) {
@@ -835,10 +835,6 @@ Signal::Signal(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> Signal::evaluate(SymbolTable& symbolTable) {
-    // Clear input buffer
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    // Returns the numeric value
     int input;
     cin >> input;
     return make_pair(SymbolType::NUMBER, input);
@@ -851,7 +847,6 @@ Number::Number(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> Number::evaluate(SymbolTable& symbolTable) {
-    // Returns the numeric value
     return make_pair(SymbolType::NUMBER, this->value);
 }
 
@@ -862,7 +857,6 @@ String::String(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> String::evaluate(SymbolTable& symbolTable) {
-    // Returns the string value
     return make_pair(SymbolType::ATHLETE, this->value);
 }
 
@@ -873,7 +867,6 @@ Down::Down(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> Down::evaluate(SymbolTable& symbolTable) {
-    // Returns the string value
     return make_pair(SymbolType::DOWN, this->value);
 }
 
@@ -884,7 +877,6 @@ Identifier::Identifier(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> Identifier::evaluate(SymbolTable& symbolTable) {
-    // Returns the identifier value in the symbolTable
     if (!holds_alternative<string>(this->value)) {
         throw invalid_argument("Semantic: Identifier value must be of type string");
     }
@@ -925,6 +917,5 @@ NoOp::NoOp(NodeValue value, vector<unique_ptr<Node>> children) {
 }
 
 pair<SymbolType, NodeValue> NoOp::evaluate(SymbolTable& symbolTable) {
-    // Returns empty
     return make_pair(SymbolType::EMPTY, this->value);
 }

@@ -46,3 +46,6 @@ call(qb1)
 qb1 is chooseQB(qb1)
 
 call(qb1)
+
+number a is signal()
+call(a)
