@@ -2,11 +2,6 @@
 
 Programming language created to sketch Football plays and strategies.
 
-### Compile 
-
-    bison -d parser.y 
-    flex lexer.l 
-    gcc -o nfl lex.yy.c parser.tab.c
 
 ## Syntax Diagram
 
@@ -14,29 +9,38 @@ Programming language created to sketch Football plays and strategies.
 
 ## EBNF
 
-    PROGRAM = { STATEMENT | DECLARATION };
+    PROGRAM = { STATEMENT };
 
-    DECLARATION = "action", TYPE, IDENTIFIER, "(", (λ | DECLARATION_ARGUMENTS) ")", DECLARATION_BLOCK, "\n";
-    DECLARATION_ARGUMENTS = IDENTIFIER, TYPE, {",", IDENTIFIER, TYPE};
-    DECLARATION_BLOCK = "{", { STATEMENT | ("result", GENERAL_EXPRESSION) }, "}";
+    STATEMENT = ( λ | ASSIGNMENT | CALL | WHEN_CONDITIONAL | DRIVE_LOOP | VARDEC | FUNCTION_DECLARATION | PLAYUNTIL_LOOP), "\n" ;
 
+    FUNCTION_STATEMENT = ( λ | ASSIGNMENT | CALL | FUNCTION_WHEN_CONDITIONAL | FUNCTION_DRIVE_LOOP | VARDEC | RESULT | FUNCTION_PLAYUNTIL_LOOP), "\n" ;
 
-    STATEMENT = ( λ | ASSIGNMENT | CALL | WHEN_CONDITIONAL | DRIVE_LOOP | VARDEC | PLAYUNTIL_LOOP), "\n" ;
+    BLOCK = "{", { STATEMENT }, "}";
+    FUNCTION_BLOCK = "{", { FUNCTION_STATEMENT }, "}";
 
-    ASSIGNMENT = IDENTIFIER, ("is", GENERAL_EXPRESSION) | ACTION_CALL_ARGUMENTS ;
+    FUNCTION_DECLARATION = "action", TYPE, IDENTIFIER, "(", (λ | FUNCTION_DECLARATION_ARGUMENTS) ")", FUNCTION_BLOCK, "\n";
+    FUNCTION_DECLARATION_ARGUMENTS = TYPE, IDENTIFIER {",", TYPE, IDENTIFIER};
+
+    RESULT = "result", GENERAL_EXPRESSION;
+
+    WHEN_CONDITIONAL = "when", BOOLEAN_EXPRESSION, "then", BLOCK, (λ | ("otherwise", BLOCK));
+    FUNCTION_WHEN_CONDITIONAL = "when", BOOLEAN_EXPRESSION, "then", FUNCTION_BLOCK, (λ | ("otherwise", FUNCTION_BLOCK));
+
+    DRIVE_LOOP = "drive", TYPE, IDENTIFIER, "on", "(", BOOLEAN_EXPRESSION, ",", BOOLEAN_EXPRESSION, ")", BLOCK;
+    FUNCTION_DRIVE_LOOP = "drive", TYPE, IDENTIFIER, "on", "(", BOOLEAN_EXPRESSION, ",", BOOLEAN_EXPRESSION, ")", FUNCTION_BLOCK;
+
+    VARDEC = TYPE, IDENTIFIER, (λ | ("is", GENERAL_EXPRESSION));
+
+    ASSIGNMENT = IDENTIFIER, ("is", GENERAL_EXPRESSION) | ACTION_CALL_ARGUMENTS | (".", POSITION, "is", BOOLEAN_EXPRESSION) ;
     ACTION_CALL_ARGUMENTS = "(", λ | (GENERAL_EXPRESSION, {",", GENERAL_EXPRESSION}) ")";
 
     CALL = "call", "(", BOOLEAN_EXPRESSION, ")" ;
-    WHEN_CONDITIONAL = "when", BOOLEAN_EXPRESSION, "then", BLOCK, (λ | ("otherwise", BLOCK));
-    DRIVE_LOOP = "drive", TYPE, IDENTIFIER, "on", "(", EXPRESSION, ",", EXPRESSION, ")", BLOCK;
-    VARDEC = TYPE, IDENTIFIER, (λ | ("is", GENERAL_EXPRESSION));
     PLAYUNTIL_LOOP = "playuntil", BOOLEAN_EXPRESSION, BLOCK;
-    BLOCK = "{", { STATEMENT }, "}";
 
     GENERAL_EXPRESSION = PLAY_EXPRESSION | BOOLEAN_EXPRESSION;
 
     PLAY_EXPRESSION = "{", λ | (PLAY_DEFINITION, {",", PLAY_DEFINITION}), "}";
-    PLAY_DEFINITION = POSITION, ":", STRING;
+    PLAY_DEFINITION = POSITION, ":", BOOLEAN_EXPRESSION;
 
     BOOLEAN_EXPRESSION = BOOLEAN_TERM, {"or", BOOLEAN_TERM}; 
     BOOLEAN_TERM = RELATIVE_EXPRESSION, {"and", RELATIVE_EXPRESSION}; 
@@ -44,11 +48,11 @@ Programming language created to sketch Football plays and strategies.
 
     EXPRESSION = TERM, { ("+" | "-"), TERM } ;
     TERM = FACTOR, { ("*" | "/"), FACTOR } ;
-    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | DOWN | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER, (λ | ACTION_CALL_ARGUMENTS)  | ("signal", "(", ")") ;
+    FACTOR = (("+" | "-" | "not", ">>"), FACTOR) | NUMBER | STRING | DOWN | ("(", BOOLEAN_EXPRESSION, ")") | IDENTIFIER, (λ | ACTION_CALL_ARGUMENTS | (".", POSITION))  | ("signal", "(", ")") ;
 
     IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
     TYPE = "athlete" | "play" | "number" | "down" | "empty";
-    DOWN = "FirstDown" | "SecondDown" | "ThirdDown" | "FourthDown";
+    DOWN = "firstdown" | "seconddown" | "thirddown" | "fourthdown" | "toondowns";
     POSITION = "QB" | "WR" | "TE" | "RB" | "FB" | "OL" | "DL" | "LB" | "CB" | "S" | "K" | "P";
 
 
