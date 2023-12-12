@@ -620,8 +620,8 @@ pair<SymbolType, NodeValue> BinOp::evaluate(SymbolTable& symbolTable) {
     switch (get<int>(this->value)) {
         case (int) BinOperation::PLUS:
             if (
-                holds_alternative<string>(left_child.second) && left_child.first == SymbolType::ATHLETE
-                && holds_alternative<string>(right_child.second) && right_child.first == SymbolType::ATHLETE
+                holds_alternative<string>(left_child.second) && (left_child.first == SymbolType::ATHLETE || left_child.first == SymbolType::DOWN)
+                && holds_alternative<string>(right_child.second) && (right_child.first == SymbolType::ATHLETE || right_child.first == SymbolType::DOWN)
             ) {
                 result = get<string>(left_child.second) + get<string>(right_child.second);
                 resultType = SymbolType::ATHLETE;
