@@ -1,0 +1,34 @@
+number yardsLeftOnDrive is 75
+number timeLeft is 90
+down currentDown is firstdown
+number yardsLeftOnDown is 10
+number resultOfPlay
+
+playuntil timeLeft equals 0 or currentDown equals toondowns or yardsLeftOnDrive equals 0 {
+    call("******************")
+    call("Current down is " + currentDown)
+    call("Yards left on down is " + yardsLeftOnDown)
+    call("Yards left on drive is " + yardsLeftOnDrive)
+    call("Time left on drive is " + timeLeft)
+
+    call("The result of the play is ")
+    resultOfPlay is signal()
+    yardsLeftOnDrive is yardsLeftOnDrive - resultOfPlay
+    call("Time consumed in play is ")
+    timeLeft is timeLeft - signal()
+
+    yardsLeftOnDown is yardsLeftOnDown - resultOfPlay
+
+    when yardsLeftOnDown < 1 then {
+        yardsLeftOnDown is 10
+        currentDown is firstdown
+    } otherwise {
+        currentDown is >>currentDown
+    }
+}
+
+when yardsLeftOnDrive equals 0 then {
+    call("Touchdown!!!")
+} otherwise {
+    call("Game over!")
+}

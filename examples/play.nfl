@@ -1,0 +1,16 @@
+play deepBomb is {WR: "left-deep-route", TE: "crossing-route"}
+play coverTwo is {CB: "man-to-man", LB: "cover mid field"}
+athlete qb is "Patrick Mahomes"
+
+action play readDefense(play offensivePlay, play defensivePlay, athlete qb) {
+    when defensivePlay.CB equals "man-to-man" and qb equals "Patrick Mahomes" then {
+        offensivePlay.QB is "Throw to TE"
+        result offensivePlay
+    } otherwise {
+        offensivePlay.QB is "Throw deep to WR"
+        result offensivePlay
+    }
+}
+
+play playAfterRead is readDefense(deepBomb, coverTwo)
+call(playAfterRead)

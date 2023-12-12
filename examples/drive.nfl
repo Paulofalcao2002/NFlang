@@ -1,0 +1,8 @@
+number yardsGainedOnDrive is 0
+drive down currentDown on (firstdown, fourthdown) {
+    call("Current down is " + currentDown)
+    call("Enter result of the play")
+    yardsGainedOnDrive is yardsGainedOnDrive + signal()
+}
+
+call("Yards gained on drive is " + yardsGainedOnDrive)
