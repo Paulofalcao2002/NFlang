@@ -55,7 +55,7 @@ string incrementDown(const string& down) {
         return "toondowns";
     }
     if (down == "toondowns") {
-        runtime_error("No downs left to increment");
+        throw runtime_error("No downs left to increment");
     }
 
     throw runtime_error("Invalid down value " + down);
