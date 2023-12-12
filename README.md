@@ -2,6 +2,8 @@
 
 Programming language created to sketch Football plays and strategies.
 
+To know more about the language see `Presentation.pdf`. You can also see examples of programs in the `examples` folder. 
+
 
 ## Syntax Diagram
 
