@@ -12,5 +12,5 @@ action play readDefense(play offensivePlay, play defensivePlay, athlete qb) {
     }
 }
 
-play playAfterRead is readDefense(deepBomb, coverTwo)
+play playAfterRead is readDefense(deepBomb, coverTwo, qb)
 call(playAfterRead)

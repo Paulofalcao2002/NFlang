@@ -1,0 +1,24 @@
+# Actions are similar to functions in programming languages
+
+# It can have no argument and return nothing
+
+action empty callAudible() {
+    call("Omaha! Omaha!")
+}
+
+callAudible() # You must call the action with the correct amount of arguments
+
+# It can have arguments and return any type 
+
+action down playCurrentDown(down d, play p) {
+    when p.QB equals "Patrick Mahomes" then {
+        result firstdown
+    } otherwise {
+        result >>d
+    }
+}
+
+play myPlay is  {QB: "Joe Burrow"}
+down currentDown is thirddown 
+currentDown is playCurrentDown(currentDown, myPlay) # Must call action with the correct amount of arguments
+call(currentDown)

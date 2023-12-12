@@ -1,0 +1,22 @@
+# down is a special value that can only have values: firstdown, seconddown, thirddown, fourthdown, toondowns
+down myDown is firstdown 
+
+call(myDown)
+
+# To advance manually the value of a down use the increment >> operator
+
+myDown is >>myDown
+
+call(myDown)
+
+# When a down is toondowns, it will raise an error if you try to increment it 
+
+myDown is toondowns
+
+# myDown is >>myDown # raises error
+
+# You can perform a special kind of driveLoop in all downs 
+
+drive down d on (firstdown, fourthdown) {
+    call(d)
+}

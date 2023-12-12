@@ -1,0 +1,9 @@
+# Playuntil loop is another kind of loop, similar to while in c. The only difference
+# is that we specify the stop condition of the loop
+
+number i is 1
+
+playuntil i equals 5 {
+    call(i)
+    i is >>i
+}

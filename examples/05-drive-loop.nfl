@@ -1,0 +1,10 @@
+# Drive loop is a special kind of loop, similar to the for in python
+# It can be performed in number and downs
+
+drive number i on (1, 5) {
+    call(i)
+}
+
+drive down d on (firstdown, thirddown) {
+    call(d)
+}

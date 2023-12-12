@@ -1,0 +1,9 @@
+# You can pass input (only integers) to the programs using signal()
+# You can print expressions in the terminal using call (like we are doing often)
+
+number readNumber
+call("Enter a number")
+
+
+readNumber is signal()
+call("You entered " + readNumber)

@@ -1,0 +1,27 @@
+# To create a variable you need to declare its type and name
+number myNumber
+
+# Now you can assign a value to it, respecting the declared type
+myNumber is 10
+
+call(myNumber) # Show myNumber value in the terminal
+
+myNumber is 5 # Change myNumber value
+
+call(myNumber) # Show the changed value in the terminal
+
+# You can also create a variable and assign a value to it in the same line
+
+athlete myQb is "Lamar Jackson" 
+
+call(myQb) # Show myQb value in the terminal
+
+# There are 5 types in NFLang: number, athlete, play, down and empty
+
+number myOtherNumber is 8 # number type can only have integer values
+athlete myWR is "Tyreek Hill" # athlete type can only contain strings (text)
+play myPlay is {WR: "Crossing-route"} # play type is a special type that defines what each position do in a play
+down currentDown is thirddown # down type is a special type for defining the downs of a drive
+empty emptyValue is 30 # empty type is always empty, used to specify functions that do not return values 
+
+call(emptyValue)

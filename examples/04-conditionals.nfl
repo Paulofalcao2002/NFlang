@@ -1,0 +1,15 @@
+# Conditionals are expressed using when (boolean value) then block otherwise block 
+
+number myCondition is 1 equals 1
+
+when myCondition then {
+    call("My condition is true")
+} otherwise {
+    call("My condition is false")
+}
+
+# The otherwise block is optional
+
+when not myCondition then {
+    call("Will never be executed")
+}
