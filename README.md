@@ -4,6 +4,19 @@ Programming language created to sketch Football plays and strategies.
 
 To know more about the language see `Presentation.pdf`. You can also see examples of programs in the `examples` folder. 
 
+## Usage
+
+To use the NFLang compiler run:
+
+```bash
+./nfl <filename>
+```
+
+To recompile the `nfl` executable run:
+
+```bash
+./compile.sh
+```
 
 ## Syntax Diagram
 
